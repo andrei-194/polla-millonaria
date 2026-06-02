@@ -8,7 +8,7 @@
   <div class="auth-brand">
     <i class="bi bi-trophy-fill auth-brand__icon"></i>
     <div class="auth-brand__name">Polla Futbolera</div>
-    <div class="auth-brand__tagline">Pronosticá. Competí. Ganá.</div>
+    <div class="auth-brand__tagline">Pronosticá · Competí · Ganá</div>
   </div>
 
   <div class="auth-card">
@@ -30,12 +30,14 @@
           {% if forloop.first %}autofocus{% endif %}
         >
         {% for error in field.errors %}
-        <div class="form-error"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+        <div class="form-error">
+          <i class="bi bi-exclamation-circle"></i> {{ error }}
+        </div>
         {% endfor %}
       </div>
       {% endfor %}
 
-      <div class="mt-5">
+      <div class="mt-6">
         <button type="submit" class="btn btn-primary">
           <i class="bi bi-person-plus"></i> Crear cuenta
         </button>

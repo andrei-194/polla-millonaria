@@ -8,13 +8,14 @@
   <div class="auth-brand">
     <i class="bi bi-trophy-fill auth-brand__icon"></i>
     <div class="auth-brand__name">Polla Futbolera</div>
-    <div class="auth-brand__tagline">Pronosticá. Competí. Ganá.</div>
+    <div class="auth-brand__tagline">Pronosticá · Competí · Ganá</div>
   </div>
 
   {% if messages %}
-  <div style="width:100%;max-width:400px;margin-bottom:1rem;display:flex;flex-direction:column;gap:8px;">
+  <div style="width:100%;max-width:400px;margin-bottom:1rem;display:flex;flex-direction:column;gap:8px;position:relative;z-index:1;">
     {% for message in messages %}
     <div class="app-toast app-toast--{% if message.tags == 'error' %}error{% else %}info{% endif %}">
+      <i class="bi bi-{% if message.tags == 'error' %}x-circle-fill{% else %}info-circle-fill{% endif %}"></i>
       {{ message }}
     </div>
     {% endfor %}
@@ -41,7 +42,7 @@
                autocomplete="current-password" required>
       </div>
 
-      <div class="mt-5">
+      <div class="mt-6">
         <button type="submit" class="btn btn-primary">
           <i class="bi bi-box-arrow-in-right"></i> Entrar
         </button>

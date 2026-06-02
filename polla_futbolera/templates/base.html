@@ -3,13 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0d3b2e">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#070c14">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>{% block title %}Polla Futbolera{% endblock %}</title>
+
   {% load static %}
+
+  <!-- Fonts: Barlow Condensed (display) + Outfit (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+  <!-- App styles -->
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
   {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -18,7 +29,7 @@
 
   {% block full_page %}
 
-  <!-- ── App Header ── -->
+  <!-- Header -->
   <header class="app-header">
     {% block header_back %}
     <span class="btn-icon btn-icon--placeholder" aria-hidden="true"></span>
@@ -31,23 +42,27 @@
     {% endblock %}
   </header>
 
-  <!-- ── Flash messages ── -->
+  <!-- Flash messages -->
   {% if messages %}
   <div class="toast-container" id="toastContainer">
     {% for message in messages %}
     <div class="app-toast app-toast--{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+      {% if message.tags == 'error' %}<i class="bi bi-x-circle-fill"></i>
+      {% elif message.tags == 'success' %}<i class="bi bi-check-circle-fill"></i>
+      {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-triangle-fill"></i>
+      {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
       {{ message }}
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <!-- ── Main content ── -->
+  <!-- Content -->
   <main class="app-content {% block content_class %}{% endblock %}">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- ── Bottom Navigation ── -->
+  <!-- Bottom Navigation -->
   {% if user.is_authenticated %}
   <nav class="bottom-nav" aria-label="Navegación principal">
 
@@ -100,8 +115,8 @@
 {% if messages %}
 <script>
   document.querySelectorAll('.app-toast').forEach(function(t) {
-    setTimeout(function() { t.style.opacity = '0'; }, 3000);
-    setTimeout(function() { t.remove(); }, 3300);
+    setTimeout(function() { t.style.opacity = '0'; }, 3500);
+    setTimeout(function() { t.remove(); }, 3800);
   });
 </script>
 {% endif %}

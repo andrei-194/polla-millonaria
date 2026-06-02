@@ -6,25 +6,27 @@
 
 {% block content %}
 
-<!-- Avatar + nombre -->
-<div class="text-center" style="padding: 1.5rem 0 1rem;">
+<!-- Avatar + identidad -->
+<div class="text-center" style="padding: var(--s6) 0 var(--s5);">
   {% if form.instance.avatar %}
     <img src="{{ form.instance.avatar.url }}" alt="Avatar"
-         class="avatar avatar--lg" style="margin: 0 auto 0.75rem;">
+         class="avatar avatar--lg" style="margin: 0 auto var(--s3);">
   {% else %}
-    <div class="avatar avatar--lg" style="margin: 0 auto 0.75rem; font-size: 2rem;">
+    <div class="avatar avatar--lg" style="margin: 0 auto var(--s3);">
       {{ user.username|first|upper }}
     </div>
   {% endif %}
-  <div style="font-size: var(--text-xl); font-weight: var(--font-bold);">{{ user.username }}</div>
-  <div class="text-muted text-sm">{{ user.email }}</div>
+  <div style="font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--fw-bold); letter-spacing: 0.02em; text-transform: uppercase;">
+    {{ user.username }}
+  </div>
+  <div class="text-sm text-muted mt-3" style="margin-top: 4px;">{{ user.email }}</div>
 </div>
 
 <!-- Stats -->
 <div class="stats-grid">
   <div class="stat-card">
     <div class="stat-card__value">{{ form.instance.total_points }}</div>
-    <div class="stat-card__label">Puntos totales</div>
+    <div class="stat-card__label">Puntos</div>
   </div>
   <div class="stat-card">
     <div class="stat-card__value">{{ form.instance.accuracy_percentage|floatformat:0 }}%</div>
@@ -40,7 +42,7 @@
   </div>
 </div>
 
-<!-- Editar bio y avatar -->
+<!-- Editar perfil -->
 <div class="section-title">Editar perfil</div>
 
 <form method="post" enctype="multipart/form-data">
@@ -48,22 +50,17 @@
 
   <div class="form-field">
     <label class="form-label" for="{{ form.bio.id_for_label }}">Bio</label>
-    <textarea
-      id="{{ form.bio.id_for_label }}"
-      name="bio"
-      class="form-input"
-      rows="3"
-      placeholder="Contá algo sobre vos..."
-      style="min-height: auto; resize: none;"
-    >{{ form.bio.value|default:'' }}</textarea>
+    <textarea id="{{ form.bio.id_for_label }}" name="bio"
+              class="form-input" rows="3"
+              placeholder="Contá algo sobre vos...">{{ form.bio.value|default:'' }}</textarea>
   </div>
 
   <div class="form-field">
     <label class="form-label" for="{{ form.avatar.id_for_label }}">Foto de perfil</label>
     <input type="file" id="{{ form.avatar.id_for_label }}"
            name="avatar" accept="image/jpeg,image/png,image/webp"
-           class="form-input" style="padding: 12px;">
-    <div class="text-xs text-muted" style="margin-top: 4px;">JPG, PNG o WEBP · máx. 2 MB</div>
+           class="form-input" style="height: auto; padding: var(--s3) var(--s4);">
+    <div class="text-xs text-muted mt-3" style="margin-top: var(--s2);">JPG, PNG o WEBP · máx. 2 MB</div>
   </div>
 
   <button type="submit" class="btn btn-primary">
@@ -71,11 +68,11 @@
   </button>
 </form>
 
-<!-- Ajustes de cuenta -->
-<div class="section-title mt-5">Cuenta</div>
+<!-- Cuenta -->
+<div class="section-title mt-6">Cuenta</div>
 
-<div style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--color-border);">
-  <a href="{% url 'accounts:password_change' %}" class="list-row">
+<div class="list-group">
+  <a href="{% url 'accounts:password_change' %}" class="list-row list-row--link">
     <div class="list-row__icon"><i class="bi bi-key"></i></div>
     <div class="list-row__content">
       <div class="list-row__label">Cambiar contraseña</div>
@@ -85,12 +82,13 @@
 
   <form method="post" action="{% url 'accounts:logout' %}">
     {% csrf_token %}
-    <button type="submit" class="list-row w-full" style="background:none; border:none; cursor:pointer; color: var(--color-danger); border-top: 1px solid var(--color-border);">
-      <div class="list-row__icon" style="background: #fee2e2; color: var(--color-danger);">
+    <button type="submit" class="list-row list-row--link w-full"
+            style="background:none; border:none; text-align:left; color: var(--danger);">
+      <div class="list-row__icon" style="color: var(--danger); border-color: rgba(255,71,87,0.2); background: rgba(255,71,87,0.08);">
         <i class="bi bi-box-arrow-right"></i>
       </div>
       <div class="list-row__content">
-        <div class="list-row__label">Cerrar sesión</div>
+        <div class="list-row__label" style="color: var(--danger);">Cerrar sesión</div>
       </div>
     </button>
   </form>

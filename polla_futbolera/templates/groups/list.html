@@ -5,7 +5,7 @@
 {% block nav_groups %}active{% endblock %}
 
 {% block header_action %}
-<a href="{% url 'groups:create' %}" class="btn-icon" aria-label="Crear grupo">
+<a href="{% url 'groups:create' %}" class="btn-icon" aria-label="Crear grupo" title="Crear grupo">
   <i class="bi bi-plus-lg"></i>
 </a>
 {% endblock %}
@@ -21,14 +21,14 @@
     <div class="group-card__content">
       <p class="group-card__name">{{ group.name }}</p>
       <span class="group-card__meta">
-        {% if group.description %}{{ group.description|truncatechars:40 }}{% else %}Sin descripción{% endif %}
+        {% if group.description %}{{ group.description|truncatechars:45 }}{% else %}Sin descripción{% endif %}
       </span>
     </div>
     <i class="bi bi-chevron-right group-card__chevron"></i>
   </a>
   {% endfor %}
 
-  <div class="mt-4">
+  <div class="mt-5">
     <a href="{% url 'groups:join' %}" class="btn btn-secondary">
       <i class="bi bi-door-open"></i> Unirse con código
     </a>
@@ -36,10 +36,10 @@
 
 {% else %}
   <div class="empty-state">
-    <i class="bi bi-people empty-state__icon"></i>
+    <i class="bi bi-shield empty-state__icon"></i>
     <h2 class="empty-state__title">Sin grupos aún</h2>
-    <p class="empty-state__subtitle">Creá tu grupo o unite con un código de invitación.</p>
-    <div style="display:flex;flex-direction:column;gap:var(--space-3);width:100%;max-width:280px;">
+    <p class="empty-state__subtitle">Creá tu grupo o unite con un código de invitación para empezar a pronosticar.</p>
+    <div style="display:flex;flex-direction:column;gap:var(--s3);width:100%;max-width:280px;">
       <a href="{% url 'groups:create' %}" class="btn btn-primary">
         <i class="bi bi-plus-circle"></i> Crear grupo
       </a>
