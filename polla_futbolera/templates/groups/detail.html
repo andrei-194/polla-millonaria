@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }} — Polla Futbolera{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="bi bi-shield-fill-check text-success"></i> {{ group.name }}
+        </h1>
+        {% if group.description %}
+        <p class="text-muted">{{ group.description }}</p>
+        {% endif %}
+    </div>
+    <div class="d-flex gap-2">
+        {% if membership.is_admin %}
+        <a href="{% url 'groups:invite' slug=group.slug %}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-share"></i> Invitar
+        </a>
+        <a href="{% url 'tournaments:activate' slug=group.slug %}" class="btn btn-success btn-sm">
+            <i class="bi bi-plus"></i> Agregar torneo
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Torneos activos -->
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-trophy"></i> Torneos activos</h5>
+            </div>
+            <div class="card-body">
+                {% if group_tournaments %}
+                <div class="list-group list-group-flush">
+                    {% for gt in group_tournaments %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div>
+                            <strong>{{ gt.tournament.name }}</strong>
+                            <small class="text-muted d-block">{{ gt.tournament.season }}</small>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'tournaments:detail' slug=group.slug tournament_id=gt.tournament.id %}"
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-calendar3"></i> Partidos
+                            </a>
+                            <a href="{% url 'scoring:leaderboard' slug=group.slug tournament_id=gt.tournament.id %}"
+                               class="btn btn-outline-warning">
+                                <i class="bi bi-bar-chart"></i> Tabla
+                            </a>
+                            <a href="{% url 'predictions:group_predictions' slug=group.slug tournament_id=gt.tournament.id %}"
+                               class="btn btn-outline-info">
+                                <i class="bi bi-eye"></i> Pronósticos
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">
+                    No hay torneos activos.
+                    {% if membership.is_admin %}
+                    <a href="{% url 'tournaments:activate' slug=group.slug %}">Agregar uno</a>.
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Miembros -->
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Miembros ({{ members|length }})</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for m in members %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-person-circle text-muted"></i> {{ m.user.username }}
+                        {% if m.role == "admin" %}
+                        <span class="badge bg-success ms-1">Admin</span>
+                        {% endif %}
+                    </div>
+                    {% if membership.is_admin and m.user != request.user and m.role != "admin" %}
+                    <form method="post"
+                          action="{% url 'groups:member_remove' slug=group.slug user_id=m.user.id %}"
+                          onsubmit="return confirm('¿Expulsar a {{ m.user.username }}?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-person-x"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

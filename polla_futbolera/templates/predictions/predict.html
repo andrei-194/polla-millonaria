@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Pronosticar — Polla Futbolera{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Tu pronóstico</h4>
+            </div>
+            <div class="card-body p-4">
+                <!-- Match info -->
+                <div class="text-center mb-4">
+                    <div class="d-flex justify-content-center align-items-center gap-4 mb-2">
+                        <span class="h5 fw-bold">{{ match.home_team }}</span>
+                        <span class="text-muted fw-bold fs-4">vs</span>
+                        <span class="h5 fw-bold">{{ match.away_team }}</span>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-calendar3"></i>
+                        {{ match.match_date|date:"d/m/Y H:i" }}
+                        &bull; {{ match.phase }}
+                    </small>
+                </div>
+
+                <hr>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row align-items-center g-3 mb-4">
+                        <div class="col">
+                            <label class="form-label text-center w-100 fw-semibold">
+                                {{ match.home_team }}
+                            </label>
+                            {{ form.home_goals }}
+                        </div>
+                        <div class="col-auto text-center">
+                            <span class="display-6 text-muted">—</span>
+                        </div>
+                        <div class="col">
+                            <label class="form-label text-center w-100 fw-semibold">
+                                {{ match.away_team }}
+                            </label>
+                            {{ form.away_goals }}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle"></i> Guardar pronóstico
+                        </button>
+                        <a href="{% url 'tournaments:detail' slug=group.slug tournament_id=tournament_id %}"
+                           class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+/* Polla Futbolera — Custom styles */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-size: 1.25rem;
+    letter-spacing: -0.5px;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+/* Main content spacing */
+main.container {
+    min-height: calc(100vh - 160px);
+}
+
+/* Table improvements */
+.table > :not(caption) > * > * {
+    padding: 0.75rem 1rem;
+}
+
+/* Badge tweaks */
+.badge {
+    font-weight: 500;
+}
+
+/* Flash messages */
+.messages .alert {
+    border-radius: 0.5rem;
+}
+
+/* Input number centering for predictions */
+input[type="number"] {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Leaderboard podium icons */
+.bi-trophy-fill {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* Footer */
+footer {
+    background-color: #f8f9fa;
+}
