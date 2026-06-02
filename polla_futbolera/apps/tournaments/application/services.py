@@ -1,25 +1,11 @@
-from .dtos import ActivateTournamentDTO, MatchSummaryDTO
-from ..domain.exceptions import TournamentNotFoundError
+from .dtos import MatchSummaryDTO
 from ..domain.ports import FootballAPIPort
-from ..infrastructure.models import Tournament, Match, Team, GroupTournament
+from ..infrastructure.models import Tournament, Match, Team
 
 
 class TournamentService:
     def __init__(self, football_api: FootballAPIPort | None = None):
         self.football_api = football_api
-
-    def activate_tournament(self, dto: ActivateTournamentDTO) -> GroupTournament:
-        try:
-            tournament = Tournament.objects.get(id=dto.tournament_id)
-        except Tournament.DoesNotExist:
-            raise TournamentNotFoundError("Torneo no encontrado")
-
-        gt, _ = GroupTournament.objects.get_or_create(
-            group_id=dto.group_id,
-            tournament=tournament,
-            defaults={"activated_by_id": dto.activated_by_id},
-        )
-        return gt
 
     def sync_fixtures(self, tournament: Tournament) -> int:
         if not self.football_api:
@@ -35,7 +21,7 @@ class TournamentService:
                 external_code=fixture.away_team_code,
                 defaults={"name": fixture.away_team_name},
             )
-            match, created = Match.objects.update_or_create(
+            _, created = Match.objects.update_or_create(
                 external_id=fixture.external_id,
                 defaults={
                     "tournament": tournament,
@@ -50,14 +36,9 @@ class TournamentService:
                 count += 1
         return count
 
-    def get_matches_for_group_tournament(self, group_id: int, tournament_id: int) -> list[MatchSummaryDTO]:
-        try:
-            gt = GroupTournament.objects.get(group_id=group_id, tournament_id=tournament_id)
-        except GroupTournament.DoesNotExist:
-            return []
-
+    def get_matches(self, tournament_id: int) -> list[MatchSummaryDTO]:
         matches = (
-            Match.objects.filter(tournament=gt.tournament)
+            Match.objects.filter(tournament_id=tournament_id)
             .select_related("home_team", "away_team")
             .order_by("match_date")
         )

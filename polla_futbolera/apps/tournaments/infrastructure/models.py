@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db import models
 
 
@@ -28,26 +27,6 @@ class Team(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class GroupTournament(models.Model):
-    group = models.ForeignKey(
-        "groups.Group", on_delete=models.CASCADE, related_name="group_tournaments"
-    )
-    tournament = models.ForeignKey(
-        Tournament, on_delete=models.CASCADE, related_name="group_tournaments"
-    )
-    activated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True
-    )
-    activated_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = "tournaments_grouptournament"
-        unique_together = ("group", "tournament")
-
-    def __str__(self):
-        return f"{self.group.name} — {self.tournament.name}"
 
 
 class Match(models.Model):

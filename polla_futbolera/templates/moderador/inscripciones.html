@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Inscripciones — {{ quiniela.name }}{% endblock %}
+{% block page_title %}Inscripciones{% endblock %}
+{% block nav_panel %}active{% endblock %}
+{% block nav_gestion %}active{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'quinielas:moderador_dashboard' %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+
+{# --- Info de la quiniela --- #}
+<div class="card mb-4" style="margin-bottom: var(--s4);">
+  <div class="card__body">
+    <div style="font-weight: var(--fw-semibold);">{{ quiniela.name }}</div>
+    <div class="text-xs text-muted">{{ quiniela.tournament.name }} · {{ quiniela.tournament.season }}</div>
+  </div>
+</div>
+
+{# --- Paso 1: aviso si hay públicos sin promover --- #}
+{% if publicos_pendientes %}
+<div class="card mb-4" style="margin-bottom: var(--s4); border-left: 3px solid var(--warning, #f59e0b);">
+  <div class="card__body" style="display:flex; align-items:flex-start; gap: var(--s3);">
+    <i class="bi bi-exclamation-triangle-fill" style="color: var(--warning, #f59e0b); margin-top: 2px; flex-shrink:0;"></i>
+    <div>
+      <div style="font-weight: var(--fw-semibold); margin-bottom: var(--s1);">
+        {{ publicos_pendientes }} usuario{% if publicos_pendientes != 1 %}s{% endif %} sin rol de jugador
+      </div>
+      <div class="text-xs text-muted" style="margin-bottom: var(--s3);">
+        Para poder inscribir a alguien en esta quiniela, primero debes asignarle el rol de <strong>Jugador</strong>
+        desde la gestión de usuarios. Es un paso previo obligatorio.
+      </div>
+      <a href="{% url 'quinielas:moderador_jugadores' %}" class="btn btn-secondary btn-sm">
+        <i class="bi bi-people"></i> Ir a gestión de usuarios
+      </a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# --- Paso 2: formulario de inscripción --- #}
+<div class="section-title">
+  Inscribir jugador en la quiniela
+  {% if jugadores_disponibles %}
+    <span class="badge badge--open" style="margin-left: var(--s2);">{{ jugadores_disponibles }} disponible{% if jugadores_disponibles != 1 %}s{% endif %}</span>
+  {% endif %}
+</div>
+
+{% if jugadores_disponibles %}
+<form method="post" action="{% url 'quinielas:moderador_inscribir' slug=quiniela.slug %}"
+      style="display:flex; gap: var(--s3); align-items:flex-end; margin-bottom: var(--s5);">
+  {% csrf_token %}
+  <div style="flex:1;">
+    {{ form.jugador }}
+  </div>
+  <button type="submit" class="btn btn-primary btn-sm">
+    <i class="bi bi-person-plus"></i> Inscribir
+  </button>
+</form>
+{% else %}
+<div class="empty-state" style="padding: var(--s4); margin-bottom: var(--s5); background: var(--surface, #f8f9fa); border-radius: var(--radius);">
+  <i class="bi bi-person-check empty-state__icon"></i>
+  <p class="empty-state__subtitle">
+    {% if inscripciones %}
+      Todos los jugadores activos ya están inscritos en esta quiniela.
+    {% else %}
+      No hay jugadores con rol asignado para inscribir.
+      {% if publicos_pendientes %}
+        Primero promuévelos desde <a href="{% url 'quinielas:moderador_jugadores' %}">gestión de usuarios</a>.
+      {% endif %}
+    {% endif %}
+  </p>
+</div>
+{% endif %}
+
+{# --- Lista de inscritos --- #}
+<div class="section-title">
+  Jugadores inscritos
+  <span class="badge badge--open" style="margin-left: var(--s2);">{{ inscripciones|length }}</span>
+</div>
+
+{% for inscripcion in inscripciones %}
+<div class="list-row">
+  <div class="avatar avatar--sm {% if not inscripcion.activa %}avatar--inactive{% endif %}">
+    {{ inscripcion.jugador.username|first|upper }}
+  </div>
+  <div class="list-row__content">
+    <div class="list-row__label" style="display:flex; align-items:center; gap: var(--s2);">
+      {{ inscripcion.jugador.username }}
+      {% if not inscripcion.activa %}<span class="badge badge--closed">Baja</span>{% endif %}
+    </div>
+    <div class="text-xs text-muted">Inscrito el {{ inscripcion.inscrito_en|date:"d M Y" }}</div>
+  </div>
+  {% if inscripcion.activa %}
+  <form method="post"
+        action="{% url 'quinielas:moderador_dar_baja' slug=quiniela.slug inscripcion_id=inscripcion.id %}"
+        onsubmit="return confirm('¿Dar de baja a {{ inscripcion.jugador.username }} de esta quiniela?')">
+    {% csrf_token %}
+    <button type="submit" class="btn-icon" style="color: var(--danger);" aria-label="Dar de baja">
+      <i class="bi bi-person-dash"></i>
+    </button>
+  </form>
+  {% endif %}
+</div>
+{% empty %}
+<div class="empty-state" style="padding: var(--s5) var(--s4);">
+  <i class="bi bi-people empty-state__icon"></i>
+  <p class="empty-state__subtitle">Aún no hay jugadores inscritos en esta quiniela.</p>
+</div>
+{% endfor %}
+
+{% endblock %}

@@ -17,9 +17,6 @@
     {{ quiniela.tournament.name }}
   </div>
   <div class="text-xs text-muted mt-3" style="margin-top: 4px;">{{ quiniela.name }}</div>
-  {% if not es_inscrito %}
-  <div class="text-xs text-muted" style="margin-top: 4px;">Mostrando top 10</div>
-  {% endif %}
 </div>
 
 <div class="card mb-5" style="margin-bottom: var(--s5);">
@@ -55,10 +52,10 @@
     </span>
     <div class="leaderboard-row__user">
       <span class="leaderboard-row__name">
-        {{ entry.username }}
+        {{ entry.user__username }}
         {% if entry.user_id == request.user.id %}<span class="badge badge--open" style="margin-left: 4px;">Tú</span>{% endif %}
       </span>
-      <span class="leaderboard-row__detail">{{ entry.exact_count }} exactos · {{ entry.winner_count }} ganador</span>
+      <span class="leaderboard-row__detail">{{ entry.exactos }} exactos · {{ entry.ganadores }} ganador</span>
     </div>
     <span class="leaderboard-row__pts">{{ entry.total_points }} <small>pts</small></span>
   </div>

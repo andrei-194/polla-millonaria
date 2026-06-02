@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load tournament_filters %}
+
+{% block title %}Pronósticos — {{ match.home_team }} vs {{ match.away_team }}{% endblock %}
+{% block page_title %}Pronósticos{% endblock %}
+{% block nav_quinielas %}active{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'quinielas:detail' slug=quiniela.slug %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Partido -->
+<div class="card mb-4" style="margin-bottom: var(--s4);">
+  <div class="card__body">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--s3);">
+      <span style="flex:1;text-align:right;font-weight:var(--fw-semibold);">{{ match.home_team }}</span>
+      <div style="text-align:center;min-width:72px;">
+        {% if match.home_score is not None %}
+        <span style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:var(--fw-black);">
+          {{ match.home_score }} - {{ match.away_score }}
+        </span>
+        {% else %}
+        <span class="text-xs text-muted">{{ match.match_date|date:"d M · H:i" }}</span>
+        {% endif %}
+      </div>
+      <span style="flex:1;text-align:left;font-weight:var(--fw-semibold);">{{ match.away_team }}</span>
+    </div>
+    <div class="text-xs text-muted" style="margin-top:var(--s2);text-align:center;">
+      <i class="bi bi-shield-fill"></i> {{ quiniela.name }}
+      &nbsp;·&nbsp;
+      <i class="bi bi-tag"></i> {{ match.phase|phase_es }}
+    </div>
+  </div>
+</div>
+
+<!-- Tabla de pronósticos -->
+<div class="section-title">Pronósticos del grupo</div>
+
+{% if predictions %}
+<div class="card">
+  <div class="card__body" style="padding:0;">
+    {% for prediction in predictions %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--s3) var(--s4);{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}{% if prediction.user == request.user %}background:rgba(var(--accent-rgb),0.07);{% endif %}">
+      <div style="display:flex;align-items:center;gap:var(--s2);">
+        {% if prediction.user == request.user %}
+        <i class="bi bi-person-fill" style="color:var(--accent);font-size:0.9rem;"></i>
+        {% else %}
+        <i class="bi bi-person" style="color:var(--text-muted);font-size:0.9rem;"></i>
+        {% endif %}
+        <span style="font-weight:{% if prediction.user == request.user %}var(--fw-semibold){% else %}var(--fw-normal){% endif %};">
+          {{ prediction.user.username }}
+          {% if prediction.user == request.user %}<span class="text-xs text-muted"> (tú)</span>{% endif %}
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;gap:var(--s3);">
+        <span style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:var(--fw-bold);letter-spacing:0.05em;">
+          {{ prediction.home_goals }} : {{ prediction.away_goals }}
+        </span>
+        {% if match.home_score is not None %}
+          {% if prediction.home_goals == match.home_score and prediction.away_goals == match.away_score %}
+          <span class="badge badge--open" style="background:var(--success-muted,rgba(34,197,94,0.15));color:#4ade80;">
+            <i class="bi bi-bullseye"></i> Exacto
+          </span>
+          {% elif prediction.home_goals > prediction.away_goals and match.home_score > match.away_score %}
+          <span class="badge" style="background:rgba(var(--accent-rgb),0.15);color:var(--accent);">
+            <i class="bi bi-check"></i> Ganador
+          </span>
+          {% elif prediction.home_goals < prediction.away_goals and match.home_score < match.away_score %}
+          <span class="badge" style="background:rgba(var(--accent-rgb),0.15);color:var(--accent);">
+            <i class="bi bi-check"></i> Ganador
+          </span>
+          {% elif prediction.home_goals == prediction.away_goals and match.home_score == match.away_score %}
+          <span class="badge" style="background:rgba(var(--accent-rgb),0.15);color:var(--accent);">
+            <i class="bi bi-check"></i> Empate
+          </span>
+          {% else %}
+          <span class="badge" style="background:rgba(255,255,255,0.05);color:var(--text-muted);">
+            <i class="bi bi-x"></i> Fallo
+          </span>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="empty-state" style="padding: var(--s6) var(--s4);">
+  <i class="bi bi-eye-slash empty-state__icon"></i>
+  <p class="empty-state__subtitle">
+    Los pronósticos se revelan una vez que comienza el partido.
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

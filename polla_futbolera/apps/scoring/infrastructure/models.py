@@ -13,11 +13,8 @@ class Score(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="scores"
     )
-    group = models.ForeignKey(
-        "groups.Group", on_delete=models.CASCADE, related_name="scores"
-    )
-    tournament = models.ForeignKey(
-        "tournaments.Tournament", on_delete=models.CASCADE, related_name="scores"
+    quiniela = models.ForeignKey(
+        "quinielas.Quiniela", on_delete=models.CASCADE, related_name="scores"
     )
     match = models.ForeignKey(
         "tournaments.Match", on_delete=models.CASCADE, related_name="scores"
@@ -28,7 +25,7 @@ class Score(models.Model):
 
     class Meta:
         db_table = "scoring_score"
-        unique_together = ("user", "match", "group")
+        unique_together = ("user", "match", "quiniela")
 
     def __str__(self):
         return f"{self.user.username}: {self.points}pts ({self.hit_type})"

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Moderador — Polla Futbolera{% endblock %}
+{% block page_title %}Panel Moderador{% endblock %}
+{% block nav_panel %}active{% endblock %}
+{% block nav_gestion %}active{% endblock %}
+
+{% block content %}
+
+<div class="section-title">Quinielas activas</div>
+
+{% for quiniela in quinielas %}
+<div class="card mb-3" style="margin-bottom: var(--s3);">
+  <div class="card__body">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-weight: var(--fw-semibold);">{{ quiniela.name }}</div>
+        <div class="text-xs text-muted">{{ quiniela.tournament.name }} · {{ quiniela.tournament.season }}</div>
+      </div>
+      <span class="badge {% if quiniela.status == 'activa' %}badge--open{% else %}badge--closed{% endif %}">
+        {{ quiniela.get_status_display }}
+      </span>
+    </div>
+    <div class="flex gap-2 mt-3" style="margin-top: var(--s3);display:flex;gap:var(--s2);">
+      <a href="{% url 'quinielas:moderador_inscripciones' slug=quiniela.slug %}"
+         class="btn btn-secondary btn-sm" style="flex:1;">
+        <i class="bi bi-people"></i> Inscripciones
+      </a>
+      <a href="{% url 'quinielas:leaderboard' slug=quiniela.slug %}"
+         class="btn btn-secondary btn-sm" style="flex:1;">
+        <i class="bi bi-bar-chart"></i> Ranking
+      </a>
+    </div>
+  </div>
+</div>
+{% empty %}
+<div class="empty-state" style="padding: var(--s6) var(--s4);">
+  <i class="bi bi-trophy empty-state__icon"></i>
+  <p class="empty-state__subtitle">No hay quinielas creadas aún.</p>
+</div>
+{% endfor %}
+
+<div class="section-title" style="margin-top: var(--s6);">Acciones rápidas</div>
+
+<a href="{% url 'quinielas:moderador_jugadores' %}" class="group-card">
+  <div class="group-card__icon"><i class="bi bi-people-fill"></i></div>
+  <div class="group-card__content">
+    <p class="group-card__name">Gestión de jugadores</p>
+    <span class="group-card__meta">Activar, desactivar y promover usuarios</span>
+  </div>
+  <i class="bi bi-chevron-right group-card__chevron"></i>
+</a>
+
+{% endblock %}

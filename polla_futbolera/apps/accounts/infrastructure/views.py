@@ -30,7 +30,7 @@ def register_view(request):
                     )
                     UserProfile.objects.get_or_create(user=user)
                     login(request, user)
-                    return redirect("groups:list")
+                    return redirect("quinielas:list")
             except UserAlreadyExistsError as e:
                 messages.error(request, str(e))
     else:
@@ -45,7 +45,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            return redirect("groups:list")
+            return redirect("quinielas:list")
         messages.error(request, "Credenciales inválidas")
     return render(request, "accounts/login.html")
 

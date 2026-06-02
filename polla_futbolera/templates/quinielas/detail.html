@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{{ quiniela.name }} — Polla Futbolera{% endblock %}
+{% block page_title %}{{ quiniela.name }}{% endblock %}
+{% block nav_quinielas %}active{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'quinielas:list' %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="card mb-4" style="margin-bottom: var(--s4);">
+  <div class="card__body">
+    <div style="font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--fw-bold); letter-spacing: 0.04em; text-transform: uppercase;">
+      {{ quiniela.tournament.name }}
+    </div>
+    <div class="text-xs text-muted" style="margin-top: 4px;">{{ quiniela.tournament.season }}</div>
+    {% if quiniela.description %}
+    <div class="text-sm" style="margin-top: var(--s3); color: var(--text-secondary);">{{ quiniela.description }}</div>
+    {% endif %}
+  </div>
+</div>
+
+{% if es_inscrito %}
+
+<div class="section-title">Partidos</div>
+
+{% if matches %}
+  {% for match in matches %}
+  <div class="card mb-3" style="margin-bottom: var(--s3);">
+    <div class="card__body">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--s3);">
+        <span style="flex:1;text-align:right;font-weight:var(--fw-semibold);">{{ match.home_team }}</span>
+        <div style="text-align:center;min-width:64px;">
+          {% if match.home_score is not None %}
+          <span style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:var(--fw-black);">{{ match.home_score }} - {{ match.away_score }}</span>
+          {% else %}
+          <span class="text-xs text-muted">{{ match.match_date|date:"d M H:i" }}</span>
+          {% endif %}
+        </div>
+        <span style="flex:1;text-align:left;font-weight:var(--fw-semibold);">{{ match.away_team }}</span>
+      </div>
+      {% if match.status == "scheduled" %}
+      <div style="margin-top:var(--s3);text-align:center;">
+        <a href="{% url 'predictions:predict' slug=quiniela.slug match_id=match.id %}"
+           class="btn btn-primary btn-sm">
+          <i class="bi bi-pencil-fill"></i> Pronosticar
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="empty-state" style="padding: var(--s6) var(--s4);">
+    <i class="bi bi-calendar3 empty-state__icon"></i>
+    <p class="empty-state__subtitle">No hay partidos cargados aún.</p>
+  </div>
+{% endif %}
+
+<div class="mt-4">
+  <a href="{% url 'quinielas:leaderboard' slug=quiniela.slug %}" class="btn btn-secondary">
+    <i class="bi bi-bar-chart"></i> Ver ranking completo
+  </a>
+</div>
+
+{% else %}
+
+<div class="section-title">Top 10</div>
+
+{% if leaderboard %}
+<div class="leaderboard-list">
+  {% for entry in leaderboard %}
+  <div class="leaderboard-row {% if forloop.counter <= 3 %}leaderboard-row--podium{% endif %}">
+    <span class="leaderboard-row__rank">
+      {% if forloop.counter == 1 %}<i class="bi bi-trophy-fill" style="color: var(--gold);"></i>
+      {% elif forloop.counter == 2 %}<i class="bi bi-trophy-fill" style="color: #94a3b8;"></i>
+      {% elif forloop.counter == 3 %}<i class="bi bi-trophy-fill" style="color: #b45309;"></i>
+      {% else %}{{ forloop.counter }}{% endif %}
+    </span>
+    <div class="leaderboard-row__user">
+      <span class="leaderboard-row__name">{{ entry.user__username }}</span>
+      <span class="leaderboard-row__detail">{{ entry.exactos }} exactos · {{ entry.ganadores }} ganador</span>
+    </div>
+    <span class="leaderboard-row__pts">{{ entry.total_points }} <small>pts</small></span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+  <div class="empty-state" style="padding: var(--s6) var(--s4);">
+    <i class="bi bi-bar-chart empty-state__icon"></i>
+    <p class="empty-state__subtitle">Aún no hay puntuaciones en esta quiniela.</p>
+  </div>
+{% endif %}
+
+{% if not user.is_authenticated %}
+<div style="margin-top: var(--s6); text-align: center;">
+  <p class="text-sm text-muted" style="margin-bottom: var(--s3);">¿Querés competir? Registrate y pedile al moderador que te inscriba.</p>
+  <a href="{% url 'accounts:register' %}" class="btn btn-primary">
+    <i class="bi bi-person-plus"></i> Registrarme
+  </a>
+</div>
+{% endif %}
+
+{% endif %}
+
+{% endblock %}

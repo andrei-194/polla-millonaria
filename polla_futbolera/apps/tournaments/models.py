@@ -1,1 +1,1 @@
-from apps.tournaments.infrastructure.models import Tournament, Team, Match, GroupTournament  # noqa: F401
+from apps.tournaments.infrastructure.models import Tournament, Team, Match  # noqa: F401

@@ -1,7 +1,7 @@
 # Spec Técnico — Polla Futbolera
 
-**Versión:** 1.0  
-**Fecha:** 2026-06-01  
+**Versión:** 2.0  
+**Fecha:** 2026-06-02  
 **Arquitectura:** Hexagonal (Application / Domain / Infrastructure)  
 **Entorno destino:** Railway  
 
@@ -9,7 +9,7 @@
 
 ## 1. Resumen del Proyecto
 
-Sistema web monolítico de quinielas futbolísticas privadas. Los usuarios crean grupos cerrados, invitan participantes, pronostican resultados de torneos reales (obtenidos vía API externa) y compiten en rankings internos.
+Sistema web monolítico de quinielas futbolísticas privadas. Los jugadores compiten prediciendo resultados de partidos de torneos reales (obtenidos vía API externa) dentro de quinielas cerradas gestionadas por moderadores. El acceso público permite explorar resultados y rankings para incentivar la inscripción.
 
 **Stack:**
 - Backend: Django 5.x (última versión estable)
@@ -34,22 +34,22 @@ polla_futbolera/                  ← raíz del proyecto Django
 │   └── wsgi.py
 │
 ├── apps/                         ← módulos Django (cada uno sigue hexagonal internamente)
-│   ├── accounts/                 ← autenticación y perfiles
-│   │   ├── application/          ← casos de uso (servicios de aplicación)
-│   │   ├── domain/               ← entidades, value objects, puertos (interfaces)
-│   │   └── infrastructure/       ← modelos Django, repositorios, adaptadores
-│   │
-│   ├── groups/                   ← grupos y ligas privadas
+│   ├── accounts/                 ← autenticación, perfiles y sistema de roles
 │   │   ├── application/
 │   │   ├── domain/
 │   │   └── infrastructure/
 │   │
-│   ├── tournaments/              ← torneos, fixtures, resultados
+│   ├── quinielas/                ← quinielas e inscripciones de jugadores
 │   │   ├── application/
 │   │   ├── domain/
 │   │   └── infrastructure/
 │   │
-│   ├── predictions/              ← pronósticos de usuarios
+│   ├── tournaments/              ← torneos, equipos, partidos y resultados
+│   │   ├── application/
+│   │   ├── domain/
+│   │   └── infrastructure/
+│   │
+│   ├── predictions/              ← pronósticos de jugadores
 │   │   ├── application/
 │   │   ├── domain/
 │   │   └── infrastructure/
@@ -110,67 +110,101 @@ infrastructure/
 
 ---
 
-## 3. Módulos del Sistema
+## 3. Sistema de Roles
 
-### 3.1 `accounts` — Autenticación y Perfiles
+El sistema de permisos se implementa con **Django Groups nativos**. No se crean modelos custom de roles. Hay 4 niveles:
+
+| Nivel | Django Group | Capacidades |
+|---|---|---|
+| **Público** | *(sin grupo asignado)* | Ver lista de quinielas activas, resultados de partidos, top 10 de cada quiniela. Puede registrarse solo. No puede predecir ni ver detalles privados. |
+| **Jugador** | `Jugador` | Predecir en quinielas donde está inscrito (dentro del plazo). Ver su ranking por quiniela. Editar perfil básico (nombre, apellido, avatar, contraseña). |
+| **Moderador** | `Moderador` | Inscribir/dar de baja jugadores en quinielas. Activar/desactivar cuentas de jugadores. Monitorear resultados y rankings. Compartir links de acceso. |
+| **Superadmin** | *(Django `is_staff` + `is_superuser`)* | Todo: crear quinielas y torneos, asignar roles, acceso al panel `/admin/`. |
+
+### Reglas de asignación de roles
+
+- Un usuario recién registrado queda como **Público** (sin grupo Django asignado).
+- Solo el **Moderador** puede promover un usuario Público a Jugador.
+- Solo el **Superadmin** puede asignar el rol Moderador.
+- Los roles se gestionan desde el panel `/admin/` (superadmin) o desde `/moderador/` (moderador, solo para el rol Jugador).
+
+### Campos editables por rol
+
+| Campo | Público | Jugador | Moderador | Superadmin |
+|---|---|---|---|---|
+| Nombre / Apellido | ✗ | ✓ | ✓ | ✓ |
+| Avatar | ✗ | ✓ | ✓ | ✓ |
+| Contraseña | ✓ | ✓ | ✓ | ✓ |
+| Email | ✗ | ✗ | ✗ | ✓ |
+| Username | ✗ | ✗ | ✗ | ✓ |
+| Puntos / Scores | ✗ | ✗ | ✗ | ✓ (automático) |
+| Rol | ✗ | ✗ | Solo → Jugador | ✓ |
+
+---
+
+## 4. Módulos del Sistema
+
+### 4.1 `accounts` — Autenticación, Perfiles y Roles
 
 **Funcionalidades:**
-- Registro con username + email + password (Django auth nativo)
-- Login / logout con sesiones
-- Perfil de usuario con avatar y estadísticas globales
-- Cambio de contraseña
+- Registro público con username + email + password (Django auth nativo). El usuario queda como Público.
+- Login / logout con sesiones.
+- Perfil de usuario con avatar, nombre, apellido y estadísticas globales.
+- Cambio de contraseña.
+- Helpers de permisos reutilizables: `is_jugador(user)`, `is_moderador(user)`.
 
 **Modelos de dominio:**
-- `User` (extiende AbstractUser de Django)
-- `UserProfile` (avatar, bio, stats agregadas)
+- `User` (extiende `AbstractUser` de Django)
+- `UserProfile` (avatar, bio, stats agregadas — campos de solo lectura para el jugador)
 
 **Endpoints (vistas):**
-- `POST /accounts/register/`
+- `POST /accounts/register/` — registro público
 - `POST /accounts/login/`
 - `POST /accounts/logout/`
-- `GET/POST /accounts/profile/`
+- `GET/POST /accounts/profile/` — editar perfil (campos permitidos según rol)
 - `GET/POST /accounts/password/change/`
 
 ---
 
-### 3.2 `groups` — Grupos y Ligas Privadas
+### 4.2 `quinielas` — Quinielas e Inscripciones
+
+**Qué es una Quiniela:**
+Una quiniela es una competencia privada de predicciones futbolísticas vinculada a exactamente un torneo real (Champions, Copa América, Liga BetPlay, etc.). Tiene su propio ranking independiente. La crea únicamente el superadmin. Los jugadores participan mediante inscripción gestionada por el moderador.
 
 **Funcionalidades:**
-- Crear un grupo con nombre, descripción y código de invitación único
-- Unirse a un grupo mediante código o link de invitación
-- Roles: Administrador (creador) y Miembro
-- El admin puede expulsar miembros y regenerar el código de invitación
-- Un usuario puede pertenecer a múltiples grupos
-- Un grupo puede tener múltiples torneos activos simultáneamente
+- Listar quinielas activas (vista pública: nombre, torneo, top 10).
+- Detalle de quiniela: partidos, ranking completo (solo jugadores inscritos), top 10 (público).
+- El moderador inscribe o da de baja jugadores en una quiniela.
+- Un jugador puede estar inscrito en múltiples quinielas simultáneamente.
 
 **Modelos de dominio:**
-- `Group` (nombre, slug, código_invitación, creado_por, fecha_creación)
-- `GroupMembership` (usuario, grupo, rol: admin|member, fecha_unión)
+- `Quiniela` (nombre, slug, descripción, torneo_id, estado: `activa`|`finalizada`, creada_en)
+- `Inscripcion` (jugador_id, quiniela_id, activa: bool, inscrito_en)
+  - Restricción única: `(jugador_id, quiniela_id)`
 
 **Endpoints (vistas):**
-- `GET /groups/` — listar grupos del usuario
-- `POST /groups/create/` — crear grupo
-- `GET /groups/<slug>/` — detalle del grupo
-- `POST /groups/join/` — unirse con código
-- `GET /groups/<slug>/invite/` — ver/regenerar link de invitación
-- `POST /groups/<slug>/members/<id>/remove/` — expulsar miembro
+- `GET /quinielas/` — lista de quinielas activas (público)
+- `GET /quinielas/<slug>/` — detalle de quiniela
+- `GET /quinielas/<slug>/leaderboard/` — ranking completo (inscrito) / top 10 (público)
+- `GET /moderador/quinielas/<slug>/inscripciones/` — gestión de inscripciones (moderador)
+- `POST /moderador/quinielas/<slug>/inscripciones/agregar/` — inscribir jugador (moderador)
+- `POST /moderador/quinielas/<slug>/inscripciones/<id>/baja/` — dar de baja (moderador)
 
 ---
 
-### 3.3 `tournaments` — Torneos y Partidos
+### 4.3 `tournaments` — Torneos y Partidos
 
 **Funcionalidades:**
-- Un grupo puede activar un torneo (ej: Champions 2025/26, Copa América)
-- El torneo tiene fases (grupos, octavos, cuartos, semis, final)
-- Los partidos (fixtures) se sincronizan desde una API externa
-- Los resultados se actualizan automáticamente cuando el partido termina
-- Un admin de grupo puede forzar sincronización manual
+- El superadmin crea torneos desde el panel `/admin/` o vía comando de gestión.
+- Al crear una Quiniela, el superadmin le asigna un torneo existente.
+- Los partidos (fixtures) se sincronizan desde una API externa.
+- Los resultados se actualizan automáticamente cuando el partido termina.
+- El superadmin puede forzar sincronización manual desde el panel `/admin/`.
 
 **Modelos de dominio:**
-- `Tournament` (nombre, código_externo, temporada, estado: activo|finalizado)
-- `GroupTournament` (grupo, torneo, fecha_activación) ← relación many-to-many
-- `Match` (torneo, fase, equipo_local, equipo_visitante, fecha, resultado, estado)
-- `Team` (nombre, código, logo_url)
+- `Tournament` (nombre, código_externo, temporada, estado: `activo`|`finalizado`)
+- `Team` (nombre, código_externo, logo_url)
+- `Match` (torneo_id, fase, equipo_local_id, equipo_visitante_id, fecha, resultado_local, resultado_visitante, estado: `programado`|`en_curso`|`finalizado`|`postergado`, external_id)
 
 **Puerto de API externa:**
 ```python
@@ -182,90 +216,113 @@ class FootballAPIPort(Protocol):
 
 **Adaptador:** `infrastructure/adapters.py` implementa `FootballAPIPort` para la API elegida (API-Football, football-data.org, etc.). El adaptador es intercambiable sin tocar el dominio.
 
-**Sincronización:** Tarea periódica con `django-q2` o `Celery` (a definir). En Railway se puede usar un `worker` service separado o un cron job nativo de Railway.
+**Sincronización:** Tarea periódica con `django-q2`. En Railway se configura como worker service separado.
 
 **Endpoints (vistas):**
-- `GET /tournaments/` — listar torneos disponibles
-- `POST /groups/<slug>/tournaments/add/` — activar torneo en grupo
-- `GET /groups/<slug>/tournaments/<id>/` — fixtures del torneo en el grupo
-- `POST /groups/<slug>/tournaments/<id>/sync/` — sincronización manual (admin)
+- `GET /torneos/` — lista de torneos disponibles (público, solo lectura)
+- `GET /torneos/<id>/partidos/` — fixtures del torneo (público)
 
 ---
 
-### 3.4 `predictions` — Pronósticos
+### 4.4 `predictions` — Pronósticos
 
 **Funcionalidades:**
-- Cada miembro de un grupo puede pronosticar el resultado de cada partido
-- El plazo para pronosticar cierra X minutos antes del inicio del partido (configurable)
-- El pronóstico incluye: goles local, goles visitante
-- Una vez cerrado el plazo, el pronóstico no puede editarse
-- Vista de "mis pronósticos" y "pronósticos del grupo" (visible solo tras cierre)
+- Solo jugadores inscritos en la quiniela pueden pronosticar.
+- El plazo para pronosticar cierra X minutos antes del inicio del partido (configurable via `PREDICTION_DEADLINE_MINUTES`).
+- El pronóstico incluye: goles local y goles visitante.
+- Una vez cerrado el plazo, el pronóstico no puede crearse ni editarse.
+- Vista "mis pronósticos" por quiniela.
+- Pronósticos de otros jugadores visibles solo tras cierre del plazo.
 
 **Modelos de dominio:**
-- `Prediction` (usuario, partido, grupo, goles_local, goles_visitante, enviado_en)
-- Restricción: única por (usuario, partido, grupo)
+- `Prediction` (jugador_id, partido_id, quiniela_id, goles_local, goles_visitante, enviado_en)
+  - Restricción única: `(jugador_id, partido_id, quiniela_id)`
 
 **Reglas de negocio (en dominio):**
-- Si `ahora >= partido.fecha - PREDICTION_DEADLINE_MINUTES` → no se puede crear/editar
-- Los pronósticos de otros usuarios no se muestran hasta que cierre el plazo
+- Si `ahora >= partido.fecha - PREDICTION_DEADLINE_MINUTES` → lanzar `PredictionClosedError`
+- Los pronósticos ajenos no se exponen hasta que cierre el plazo del partido
 
 **Endpoints (vistas):**
-- `GET /groups/<slug>/tournaments/<id>/matches/<match_id>/predict/`
-- `POST /groups/<slug>/tournaments/<id>/matches/<match_id>/predict/`
-- `GET /groups/<slug>/tournaments/<id>/predictions/` — vista grupal
+- `GET/POST /quinielas/<slug>/partidos/<match_id>/predecir/` — crear/editar pronóstico (jugador inscrito)
+- `GET /quinielas/<slug>/mis-pronosticos/` — pronósticos propios del jugador en esa quiniela
+- `GET /quinielas/<slug>/pronosticos/<match_id>/` — pronósticos del grupo tras cierre de plazo
 
 ---
 
-### 3.5 `scoring` — Puntuación y Rankings
+### 4.5 `scoring` — Puntuación y Rankings
 
-**Sistema de puntos (configurable por grupo, con defaults):**
+**Sistema de puntos (por quiniela, con defaults configurables):**
 
 | Resultado | Puntos |
 |-----------|--------|
-| Resultado exacto (ej: 2-1 y pronosticó 2-1) | 3 pts |
-| Ganador correcto + diferencia de goles correcta | 2 pts |
+| Resultado exacto (ej: pronosticó 2-1 y fue 2-1) | 3 pts |
+| Ganador correcto + diferencia de goles exacta | 2 pts |
 | Solo ganador correcto (o empate correcto) | 1 pt |
 | Incorrecto | 0 pts |
 
 **Funcionalidades:**
-- Cálculo de puntos automático al registrar resultado de partido
-- Tabla de posiciones por grupo + torneo
-- Historial de puntos partido a partido
-- Estadísticas: racha de aciertos, % de exactos, etc.
+- Cálculo de puntos automático al registrar resultado de partido.
+- Leaderboard por quiniela: ranking completo para jugadores inscritos, top 10 para usuarios públicos.
+- Historial de puntos partido a partido por jugador.
+- Estadísticas por jugador: racha de aciertos, % de exactos.
 
 **Modelos de dominio:**
-- `Score` (usuario, grupo, torneo, partido, puntos_obtenidos, tipo_acierto)
-- `Leaderboard` (vista materializada o calculada: ranking por grupo+torneo)
+- `Score` (jugador_id, quiniela_id, partido_id, puntos_obtenidos, tipo_acierto: `exacto`|`diferencia`|`ganador`|`fallo`)
 
 **Endpoints (vistas):**
-- `GET /groups/<slug>/tournaments/<id>/leaderboard/` — tabla de posiciones
-- `GET /groups/<slug>/tournaments/<id>/stats/<user_id>/` — estadísticas de usuario
+- `GET /quinielas/<slug>/leaderboard/` — tabla de posiciones (inscrito: completa / público: top 10)
+- `GET /quinielas/<slug>/estadisticas/<user_id>/` — estadísticas de un jugador (inscrito o moderador)
 
 ---
 
-### 3.6 `notifications` — Notificaciones
+### 4.6 `notifications` — Notificaciones
 
 **Tipos de notificación (MVP):**
 - Recordatorio: "Faltan 2 horas para que cierre el plazo del partido X"
 - Alerta: "Resultado disponible: Partido X terminó Y-Z"
-- Invitación: "Te invitaron al grupo X"
+- Bienvenida: "Fuiste inscrito en la quiniela X"
 
 **Mecanismo:**
-- Notificaciones in-app almacenadas en base de datos
-- Envío por email usando Django email backend (SMTP o SendGrid)
-- Las tareas se ejecutan con `django-q2` (scheduler simple) o cron Railway
+- Notificaciones in-app almacenadas en base de datos.
+- Envío por email usando Django email backend (SMTP o SendGrid).
+- Las tareas se ejecutan con `django-q2` (scheduler simple) o cron Railway.
 
 **Modelos de dominio:**
-- `Notification` (usuario, tipo, mensaje, leída, creada_en, metadata JSON)
+- `Notification` (usuario_id, tipo, mensaje, leída: bool, creada_en, metadata: JSON)
 
 **Endpoints (vistas):**
-- `GET /notifications/` — lista de notificaciones del usuario
-- `POST /notifications/<id>/read/` — marcar como leída
-- `POST /notifications/read-all/` — marcar todas como leídas
+- `GET /notificaciones/` — lista de notificaciones del usuario autenticado
+- `POST /notificaciones/<id>/leer/` — marcar como leída
+- `POST /notificaciones/leer-todas/` — marcar todas como leídas
 
 ---
 
-## 4. Docker — Optimización para Railway
+### 4.7 Panel del Moderador
+
+Sección exclusiva para usuarios con rol `Moderador`. No es el panel `/admin/` de Django — es una interfaz web dentro de la app.
+
+**Funcionalidades:**
+- Ver lista de todos los jugadores y su estado (activo/inactivo).
+- Activar o desactivar la cuenta de un jugador.
+- Promover un usuario Público a Jugador.
+- Ver todas las quinielas activas.
+- Inscribir o dar de baja jugadores en quinielas.
+- Ver rankings y resultados de cualquier quiniela.
+
+**Endpoints (vistas):**
+- `GET /moderador/` — dashboard del moderador
+- `GET /moderador/jugadores/` — lista de usuarios públicos y jugadores
+- `POST /moderador/jugadores/<id>/activar/` — activar cuenta
+- `POST /moderador/jugadores/<id>/desactivar/` — desactivar cuenta
+- `POST /moderador/jugadores/<id>/promover/` — promover a Jugador
+- `GET /moderador/quinielas/` — lista de quinielas con stats
+- `GET /moderador/quinielas/<slug>/inscripciones/` — jugadores inscritos
+- `POST /moderador/quinielas/<slug>/inscripciones/agregar/` — inscribir jugador
+- `POST /moderador/quinielas/<slug>/inscripciones/<id>/baja/` — dar de baja
+
+---
+
+## 5. Docker — Optimización para Railway
 
 ### Estrategia de costos en Railway
 
@@ -412,7 +469,7 @@ restartPolicyType = "ON_FAILURE"
 
 ---
 
-## 5. Variables de Entorno
+## 6. Variables de Entorno
 
 ```env
 # Django
@@ -438,12 +495,11 @@ FOOTBALL_API_BASE_URL=
 
 # App
 PREDICTION_DEADLINE_MINUTES=60
-INVITATION_LINK_BASE_URL=https://tu-dominio.com
 ```
 
 ---
 
-## 6. Dependencias Python
+## 7. Dependencias Python
 
 ### `requirements/base.txt`
 ```
@@ -473,7 +529,7 @@ sentry-sdk[django]==2.*   # monitoreo de errores
 
 ---
 
-## 7. Settings por Entorno
+## 8. Settings por Entorno
 
 ### `config/settings/base.py`
 - Apps instaladas, middleware, templates, autenticación Django nativa
@@ -481,6 +537,7 @@ sentry-sdk[django]==2.*   # monitoreo de errores
 - `STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"`
 - `LOGIN_URL`, `LOGIN_REDIRECT_URL`, `LOGOUT_REDIRECT_URL`
 - Configuración `django-q2` para tareas programadas
+- Creación de Django Groups `Jugador` y `Moderador` en una migración de datos inicial
 
 ### `config/settings/development.py`
 - `DEBUG = True`
@@ -497,7 +554,7 @@ sentry-sdk[django]==2.*   # monitoreo de errores
 
 ---
 
-## 8. Endpoint de Salud
+## 9. Endpoint de Salud
 
 ```python
 # shared/infrastructure/views.py
@@ -511,40 +568,47 @@ Registrar en `config/urls.py` como `/health/` — requerido por Railway para hea
 
 ---
 
-## 9. Tareas Programadas (django-q2)
+## 10. Tareas Programadas (django-q2)
 
 | Tarea | Frecuencia | Descripción |
 |-------|------------|-------------|
 | `sync_fixtures` | Cada 6 horas | Sincroniza partidos próximos desde API de fútbol |
 | `sync_results` | Cada 5 minutos (días de partido) | Actualiza resultados de partidos en curso |
-| `calculate_scores` | Trigger por resultado | Calcula puntos al registrar resultado |
-| `send_prediction_reminders` | Cada hora | Envía recordatorios si faltan < 2 horas |
+| `calculate_scores` | Trigger por resultado | Calcula puntos al registrar resultado de un partido |
+| `send_prediction_reminders` | Cada hora | Envía recordatorios si faltan < 2 horas para el cierre |
 
-En Railway, el worker de django-q2 se puede configurar como un segundo servicio (mismo repo, distinto `startCommand`: `python manage.py qcluster`). Esto agrega costo marginal — alternativa: cron jobs de Railway apuntando a un endpoint privado.
-
----
-
-## 10. Flujo de Datos Principal
-
-```
-[Usuario] → [Vista Django] → [Servicio de Aplicación]
-                                    ↓
-                             [Puerto de Dominio]
-                                    ↓
-                         [Repositorio (ORM Django)]
-                                    ↓
-                              [PostgreSQL]
-
-[API Externa] ← [Adaptador Football API] ← [Tarea django-q2]
-                                               ↓
-                                      [Servicio de Aplicación]
-                                               ↓
-                                     [Match / Score actualizados]
-```
+En Railway, el worker de django-q2 se configura como un segundo servicio (mismo repo, distinto `startCommand`: `python manage.py qcluster`).
 
 ---
 
-## 11. Decisiones Pendientes (para definir antes de comenzar)
+## 11. Flujo de Datos Principal
+
+```
+[Usuario Público]  →  ver quinielas, top 10, resultados (solo lectura)
+
+[Jugador]  →  [Vista Django]  →  [Servicio de Aplicación]
+                                        ↓
+                                 [Puerto de Dominio]
+                                        ↓ verifica inscripción + plazo
+                                 [Repositorio (ORM Django)]
+                                        ↓
+                                    [PostgreSQL]
+
+[API Externa]  ←  [Adaptador Football API]  ←  [Tarea django-q2]
+                                                     ↓
+                                          [Servicio de Aplicación]
+                                                     ↓
+                                       [Match actualizado → Score calculado]
+                                                     ↓
+                                       [Leaderboard de Quiniela actualizado]
+
+[Moderador]  →  /moderador/  →  inscribir jugadores, activar cuentas
+[Superadmin]  →  /admin/     →  crear quinielas, torneos, asignar roles
+```
+
+---
+
+## 12. Decisiones Pendientes
 
 | Decisión | Opciones | Impacto |
 |----------|----------|---------|
@@ -555,16 +619,16 @@ En Railway, el worker de django-q2 se puede configurar como un segundo servicio 
 
 ---
 
-## 12. Orden de Implementación Recomendado
+## 13. Orden de Implementación Recomendado
 
 1. Scaffold inicial: estructura de carpetas, configuración Django, Docker, settings por entorno
 2. `shared/` — base classes de dominio, excepciones, cliente HTTP base
-3. `accounts` — registro, login, logout, perfil
-4. `groups` — CRUD de grupos, invitaciones, membresías
-5. `tournaments` — modelos, puerto de API externa, adaptador stub/mock
-6. `predictions` — lógica de pronósticos con reglas de cierre de plazo
-7. `scoring` — motor de puntuación y leaderboard
-8. `notifications` — notificaciones in-app y email
+3. `accounts` — registro, login, logout, perfil + sistema de roles (Django Groups: `Jugador`, `Moderador`) + helpers de permisos
+4. `tournaments` — modelos, puerto de API externa, adaptador stub/mock
+5. `quinielas` — modelos `Quiniela` e `Inscripcion`, vistas públicas y panel del moderador
+6. `predictions` — lógica de pronósticos con reglas de cierre de plazo, referenciando quiniela
+7. `scoring` — motor de puntuación y leaderboard por quiniela
+8. `notifications` — notificaciones in-app y email (incluyendo notificación de inscripción)
 9. Integración real con API de fútbol elegida
 10. Tarea scheduler de sincronización
 11. Polish de templates y UX
@@ -572,4 +636,4 @@ En Railway, el worker de django-q2 se puede configurar como un segundo servicio 
 
 ---
 
-*Este documento es la fuente de verdad para el agente de backend. Cualquier decisión de implementación no cubierta aquí debe seguir los principios de arquitectura hexagonal: el dominio no conoce Django ni la base de datos; los adaptadores son intercambiables.*
+*Este documento es la fuente de verdad para el agente de backend. Cualquier decisión de implementación no cubierta aquí debe seguir los principios de arquitectura hexagonal: el dominio no conoce Django ni la base de datos; los adaptadores son intercambiables. Los permisos se verifican siempre en la capa de vista (decoradores o mixins), nunca se asume el rol del usuario sin comprobarlo.*

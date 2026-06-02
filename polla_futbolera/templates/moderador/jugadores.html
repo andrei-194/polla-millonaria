@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Jugadores — Moderador{% endblock %}
+{% block page_title %}Usuarios{% endblock %}
+{% block nav_panel %}active{% endblock %}
+{% block nav_gestion %}active{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'quinielas:moderador_dashboard' %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+
+{# --- Usuarios públicos: sin ningún rol asignado --- #}
+<div class="section-title">
+  Usuarios sin rol
+  {% if publicos %}<span class="badge badge--closed" style="margin-left: var(--s2);">{{ publicos|length }}</span>{% endif %}
+</div>
+<p class="text-xs text-muted" style="margin-bottom: var(--s3);">
+  Estos usuarios se registraron pero aún no tienen rol. Asígnales el rol <strong>Jugador</strong>
+  para que puedan ser inscritos en quinielas.
+</p>
+
+{% for usuario in publicos %}
+<div class="list-row">
+  <div class="avatar avatar--sm">{{ usuario.username|first|upper }}</div>
+  <div class="list-row__content">
+    <div class="list-row__label">{{ usuario.username }}</div>
+    <div class="text-xs text-muted">{{ usuario.email }}</div>
+  </div>
+  <form method="post" action="{% url 'quinielas:moderador_promover' user_id=usuario.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-sm">
+      <i class="bi bi-arrow-up-circle"></i> Hacer jugador
+    </button>
+  </form>
+</div>
+{% empty %}
+<div class="empty-state" style="padding: var(--s4) var(--s4);">
+  <p class="empty-state__subtitle">No hay usuarios sin rol pendientes.</p>
+</div>
+{% endfor %}
+
+{# --- Jugadores: tienen el rol Jugador --- #}
+<div class="section-title" style="margin-top: var(--s6);">
+  Jugadores
+  {% if jugadores %}<span class="badge badge--open" style="margin-left: var(--s2);">{{ jugadores|length }}</span>{% endif %}
+</div>
+<p class="text-xs text-muted" style="margin-bottom: var(--s3);">
+  Usuarios con rol Jugador. Puedes suspender su acceso temporalmente o quitarles el rol
+  (lo que también los da de baja en sus quinielas activas).
+</p>
+
+{% for jugador in jugadores %}
+<div class="list-row">
+  <div class="avatar avatar--sm {% if not jugador.is_active %}avatar--inactive{% endif %}">
+    {{ jugador.username|first|upper }}
+  </div>
+  <div class="list-row__content">
+    <div class="list-row__label" style="display:flex; align-items:center; gap: var(--s2);">
+      {{ jugador.username }}
+      {% if not jugador.is_active %}<span class="badge badge--closed">Cuenta suspendida</span>{% endif %}
+    </div>
+    <div class="text-xs text-muted">{{ jugador.email }}</div>
+  </div>
+
+  <div style="display:flex; gap: var(--s2); align-items:center;">
+    {# Suspender / reactivar cuenta (is_active) #}
+    {% if jugador.is_active %}
+    <form method="post" action="{% url 'quinielas:moderador_desactivar' user_id=jugador.id %}"
+          onsubmit="return confirm('¿Suspender la cuenta de {{ jugador.username }}? No podrá iniciar sesión.')">
+      {% csrf_token %}
+      <button type="submit" class="btn-icon" title="Suspender acceso" style="color: var(--warning, #f59e0b);" aria-label="Suspender">
+        <i class="bi bi-pause-circle"></i>
+      </button>
+    </form>
+    {% else %}
+    <form method="post" action="{% url 'quinielas:moderador_activar' user_id=jugador.id %}">
+      {% csrf_token %}
+      <button type="submit" class="btn-icon" title="Reactivar acceso" style="color: var(--green);" aria-label="Reactivar">
+        <i class="bi bi-play-circle"></i>
+      </button>
+    </form>
+    {% endif %}
+
+    {# Quitar rol Jugador: lo devuelve a público y da de baja en quinielas #}
+    <form method="post" action="{% url 'quinielas:moderador_quitar_jugador' user_id=jugador.id %}"
+          onsubmit="return confirm('¿Quitar el rol Jugador a {{ jugador.username }}? Será dado de baja en todas sus quinielas activas.')">
+      {% csrf_token %}
+      <button type="submit" class="btn-icon" title="Quitar rol Jugador" style="color: var(--danger);" aria-label="Quitar rol">
+        <i class="bi bi-person-dash"></i>
+      </button>
+    </form>
+  </div>
+</div>
+{% empty %}
+<div class="empty-state" style="padding: var(--s4) var(--s4);">
+  <p class="empty-state__subtitle">No hay jugadores registrados aún.</p>
+</div>
+{% endfor %}
+
+{% endblock %}

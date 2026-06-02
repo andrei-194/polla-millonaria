@@ -282,6 +282,18 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 0 30px rgba(0,230,118,0.4), var(--shadow-md);
 }
 
+.bottom-nav__fab--disabled {
+  background: var(--surface-2, #1a2035);
+  box-shadow: none;
+  opacity: 0.4;
+}
+
+.bottom-nav__item--disabled {
+  cursor: default;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 /* ── Toast ──────────────────────────────────────────────────── */
 .toast-container {
   position: fixed;

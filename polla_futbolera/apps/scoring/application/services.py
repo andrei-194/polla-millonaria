@@ -1,7 +1,7 @@
 from django.db.models import Sum, Count, Q
 
 from .dtos import LeaderboardEntryDTO
-from ..domain.entities import calculate_hit_type, POINTS_MAP, HitType
+from ..domain.entities import calculate_hit_type, POINTS_MAP
 from ..infrastructure.models import Score
 from apps.predictions.infrastructure.models import Prediction
 from apps.tournaments.infrastructure.models import Match
@@ -13,7 +13,7 @@ class ScoringService:
         if not match.has_result():
             return 0
 
-        predictions = Prediction.objects.filter(match=match)
+        predictions = Prediction.objects.filter(match=match).select_related("quiniela")
         count = 0
         for prediction in predictions:
             hit_type = calculate_hit_type(
@@ -26,16 +26,15 @@ class ScoringService:
             Score.objects.update_or_create(
                 user_id=prediction.user_id,
                 match_id=match_id,
-                group_id=prediction.group_id,
-                tournament_id=match.tournament_id,
+                quiniela_id=prediction.quiniela_id,
                 defaults={"points": points, "hit_type": hit_type.value},
             )
             count += 1
         return count
 
-    def get_leaderboard(self, group_id: int, tournament_id: int) -> list[LeaderboardEntryDTO]:
-        scores = (
-            Score.objects.filter(group_id=group_id, tournament_id=tournament_id)
+    def get_leaderboard(self, quiniela_id: int, limit: int | None = None) -> list[LeaderboardEntryDTO]:
+        qs = (
+            Score.objects.filter(quiniela_id=quiniela_id)
             .values("user_id", "user__username")
             .annotate(
                 total_points=Sum("points"),
@@ -45,6 +44,8 @@ class ScoringService:
             )
             .order_by("-total_points")
         )
+        if limit:
+            qs = qs[:limit]
         return [
             LeaderboardEntryDTO(
                 username=s["user__username"],
@@ -54,5 +55,5 @@ class ScoringService:
                 winner_count=s["winner_count"],
                 miss_count=s["miss_count"],
             )
-            for s in scores
+            for s in qs
         ]

@@ -5,13 +5,13 @@ app_name = "predictions"
 
 urlpatterns = [
     path(
-        "groups/<slug:slug>/tournaments/<int:tournament_id>/matches/<int:match_id>/predict/",
+        "quinielas/<slug:slug>/partidos/<int:match_id>/predecir/",
         views.predict_view,
         name="predict",
     ),
     path(
-        "groups/<slug:slug>/tournaments/<int:tournament_id>/predictions/",
-        views.group_predictions_view,
-        name="group_predictions",
+        "quinielas/<slug:slug>/partidos/<int:match_id>/pronosticos/",
+        views.quiniela_predictions_view,
+        name="quiniela_predictions",
     ),
 ]

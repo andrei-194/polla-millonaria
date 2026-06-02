@@ -58,7 +58,7 @@
   {% endif %}
 
   <!-- Content -->
-  <main class="app-content {% block content_class %}{% endblock %}">
+  <main class="app-content {% if not user.is_authenticated %}app-content--guest{% endif %} {% block content_class %}{% endblock %}">
     {% block content %}{% endblock %}
   </main>
 
@@ -66,21 +66,49 @@
   {% if user.is_authenticated %}
   <nav class="bottom-nav" aria-label="Navegación principal">
 
-    <a href="{% url 'groups:list' %}"
-       class="bottom-nav__item {% block nav_groups %}{% endblock %}"
-       aria-label="Grupos">
+    <a href="{% url 'quinielas:list' %}"
+       class="bottom-nav__item {% block nav_quinielas %}{% endblock %}"
+       aria-label="Quinielas">
       <i class="bi bi-shield-fill" aria-hidden="true"></i>
-      <span>Grupos</span>
+      <span>Quinielas</span>
     </a>
 
+    {% if is_moderador %}
+    <a href="{% url 'quinielas:moderador_dashboard' %}"
+       class="bottom-nav__item {% block nav_panel %}{% endblock %}"
+       aria-label="Panel">
+      <i class="bi bi-sliders" aria-hidden="true"></i>
+      <span>Panel</span>
+    </a>
+    {% else %}
     <a href="{% url 'tournaments:list' %}"
        class="bottom-nav__item {% block nav_tournaments %}{% endblock %}"
        aria-label="Torneos">
       <i class="bi bi-trophy-fill" aria-hidden="true"></i>
       <span>Torneos</span>
     </a>
+    {% endif %}
 
-    <a href="{% url 'groups:list' %}"
+    {% if is_superadmin %}
+    <a href="{% url 'admin:index' %}"
+       class="bottom-nav__item bottom-nav__item--fab {% block nav_admin %}{% endblock %}"
+       aria-label="Admin">
+      <div class="bottom-nav__fab">
+        <i class="bi bi-gear-fill" aria-hidden="true"></i>
+      </div>
+      <span>Admin</span>
+    </a>
+    {% elif is_moderador %}
+    <a href="{% url 'quinielas:moderador_dashboard' %}"
+       class="bottom-nav__item bottom-nav__item--fab {% block nav_gestion %}{% endblock %}"
+       aria-label="Gestionar">
+      <div class="bottom-nav__fab">
+        <i class="bi bi-people-fill" aria-hidden="true"></i>
+      </div>
+      <span>Gestión</span>
+    </a>
+    {% elif is_jugador %}
+    <a href="{% url 'quinielas:list' %}"
        class="bottom-nav__item bottom-nav__item--fab {% block nav_predict %}{% endblock %}"
        aria-label="Pronosticar">
       <div class="bottom-nav__fab">
@@ -88,6 +116,14 @@
       </div>
       <span>Pred.</span>
     </a>
+    {% else %}
+    <span class="bottom-nav__item bottom-nav__item--fab bottom-nav__item--disabled" aria-hidden="true">
+      <div class="bottom-nav__fab bottom-nav__fab--disabled">
+        <i class="bi bi-lock-fill" aria-hidden="true"></i>
+      </div>
+      <span>Pred.</span>
+    </span>
+    {% endif %}
 
     <a href="{% url 'notifications:list' %}"
        class="bottom-nav__item {% block nav_notifications %}{% endblock %}"
@@ -103,6 +139,15 @@
       <span>Perfil</span>
     </a>
 
+  </nav>
+  {% else %}
+  <nav class="auth-bar" aria-label="Acceso">
+    <a href="{% url 'accounts:login' %}" class="btn btn-ghost">
+      <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+    </a>
+    <a href="{% url 'accounts:register' %}" class="btn btn-primary">
+      <i class="bi bi-person-plus-fill"></i> Registrarse gratis
+    </a>
   </nav>
   {% endif %}
 

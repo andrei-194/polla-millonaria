@@ -7,7 +7,7 @@ SECRET_KEY = config("SECRET_KEY", default="django-insecure-dev-key-change-me")
 
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 DJANGO_APPS = [
     "django.contrib.admin",
@@ -24,7 +24,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "apps.accounts",
-    "apps.groups",
+    "apps.quinielas",
     "apps.tournaments",
     "apps.predictions",
     "apps.scoring",
@@ -57,6 +57,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.accounts.context_processors.user_roles",
             ],
         },
     },
@@ -89,11 +90,10 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "/accounts/login/"
-LOGIN_REDIRECT_URL = "/groups/"
+LOGIN_REDIRECT_URL = "/quinielas/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 PREDICTION_DEADLINE_MINUTES = config("PREDICTION_DEADLINE_MINUTES", default=60, cast=int)
-INVITATION_LINK_BASE_URL = config("INVITATION_LINK_BASE_URL", default="http://localhost:8000")
 
 FOOTBALL_API_KEY = config("FOOTBALL_API_KEY", default="")
 FOOTBALL_API_BASE_URL = config("FOOTBALL_API_BASE_URL", default="https://api.football-data.org/v4")

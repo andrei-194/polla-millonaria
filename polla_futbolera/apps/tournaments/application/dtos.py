@@ -4,13 +4,6 @@ from typing import Optional
 
 
 @dataclass
-class ActivateTournamentDTO:
-    group_id: int
-    tournament_id: int
-    activated_by_id: int
-
-
-@dataclass
 class MatchSummaryDTO:
     id: int
     home_team: str

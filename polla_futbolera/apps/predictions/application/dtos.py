@@ -5,6 +5,6 @@ from dataclasses import dataclass
 class CreatePredictionDTO:
     user_id: int
     match_id: int
-    group_id: int
+    quiniela_id: int
     home_goals: int
     away_goals: int
