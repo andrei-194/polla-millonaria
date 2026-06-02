@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Polla Futbolera — Quinielas de fútbol con amigos{% endblock %}
+{% block page_title %}Quinielas{% endblock %}
+{% block nav_quinielas %}active{% endblock %}
+
+{% block content %}
+{% if not user.is_authenticated %}
+
+<div class="guest-cta">
+  <div class="guest-cta__orb"></div>
+  <p class="guest-cta__headline">Pronosticá.<br>Competí. Ganá.</p>
+  <p class="guest-cta__sub">Quinielas privadas de fútbol con amigos.</p>
+  {% if quinielas or total_jugadores %}
+  <div class="guest-cta__stats">
+    <span class="guest-cta__stat-dot"></span>
+    <span>
+      {% if quinielas %}{{ quinielas|length }} quiniela{% if quinielas|length != 1 %}s{% endif %} activa{% if quinielas|length != 1 %}s{% endif %}{% endif %}{% if quinielas and total_jugadores %} · {% endif %}{% if total_jugadores %}{{ total_jugadores }} jugador{% if total_jugadores != 1 %}es{% endif %}{% endif %}
+    </span>
+  </div>
+  {% endif %}
+  <a href="{% url 'accounts:register' %}" class="btn btn-primary guest-cta__btn">
+    <i class="bi bi-person-plus-fill"></i> Crear cuenta gratis
+  </a>
+</div>
+
+{% if quinielas %}
+<div class="section-title">
+  <i class="bi bi-circle-fill" style="font-size:7px;color:var(--green);vertical-align:middle;margin-right:4px;filter:drop-shadow(0 0 4px var(--green));animation:pulse 1.6s ease-in-out infinite;"></i>
+  En juego ahora
+</div>
+{% endif %}
+
+{% endif %}
+
+{% for quiniela in quinielas %}
+<a href="{% url 'quinielas:detail' slug=quiniela.slug %}" class="group-card">
+  <div class="group-card__icon">
+    <i class="bi bi-trophy-fill"></i>
+  </div>
+  <div class="group-card__content">
+    <p class="group-card__name">{{ quiniela.name }}</p>
+    <span class="group-card__meta">
+      {{ quiniela.tournament.name }} · {{ quiniela.tournament.season }}
+    </span>
+  </div>
+  <i class="bi bi-chevron-right group-card__chevron"></i>
+</a>
+{% empty %}
+<div class="empty-state">
+  <i class="bi bi-trophy empty-state__icon"></i>
+  <h2 class="empty-state__title">Sin quinielas activas</h2>
+  <p class="empty-state__subtitle">Pronto habrá quinielas disponibles. Volvé más tarde.</p>
+</div>
+{% endfor %}
+{% endblock %}
