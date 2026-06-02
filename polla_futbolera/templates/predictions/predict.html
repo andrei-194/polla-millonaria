@@ -1,63 +1,93 @@
 {% extends "base.html" %}
 
 {% block title %}Pronosticar — Polla Futbolera{% endblock %}
+{% block page_title %}Tu pronóstico{% endblock %}
+{% block nav_predict %}active{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'tournaments:detail' slug=group.slug tournament_id=tournament_id %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Tu pronóstico</h4>
-            </div>
-            <div class="card-body p-4">
-                <!-- Match info -->
-                <div class="text-center mb-4">
-                    <div class="d-flex justify-content-center align-items-center gap-4 mb-2">
-                        <span class="h5 fw-bold">{{ match.home_team }}</span>
-                        <span class="text-muted fw-bold fs-4">vs</span>
-                        <span class="h5 fw-bold">{{ match.away_team }}</span>
-                    </div>
-                    <small class="text-muted">
-                        <i class="bi bi-calendar3"></i>
-                        {{ match.match_date|date:"d/m/Y H:i" }}
-                        &bull; {{ match.phase }}
-                    </small>
-                </div>
 
-                <hr>
+<!-- Match scorer -->
+<div class="match-scorer">
+  <div class="match-scorer__team">
+    <div class="match-scorer__badge">{{ match.home_team|slice:":3"|upper }}</div>
+    <span class="match-scorer__name">{{ match.home_team }}</span>
+  </div>
 
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="row align-items-center g-3 mb-4">
-                        <div class="col">
-                            <label class="form-label text-center w-100 fw-semibold">
-                                {{ match.home_team }}
-                            </label>
-                            {{ form.home_goals }}
-                        </div>
-                        <div class="col-auto text-center">
-                            <span class="display-6 text-muted">—</span>
-                        </div>
-                        <div class="col">
-                            <label class="form-label text-center w-100 fw-semibold">
-                                {{ match.away_team }}
-                            </label>
-                            {{ form.away_goals }}
-                        </div>
-                    </div>
+  <div class="match-scorer__inputs">
+    <input type="number" id="home_goals" name="home_goals"
+           class="match-scorer__input"
+           min="0" max="20" inputmode="numeric" pattern="[0-9]*"
+           value="{{ form.home_goals.value|default:'' }}"
+           form="prediction-form"
+           aria-label="Goles local">
+    <span class="match-scorer__sep">:</span>
+    <input type="number" id="away_goals" name="away_goals"
+           class="match-scorer__input"
+           min="0" max="20" inputmode="numeric" pattern="[0-9]*"
+           value="{{ form.away_goals.value|default:'' }}"
+           form="prediction-form"
+           aria-label="Goles visitante">
+  </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg">
-                            <i class="bi bi-check-circle"></i> Guardar pronóstico
-                        </button>
-                        <a href="{% url 'tournaments:detail' slug=group.slug tournament_id=tournament_id %}"
-                           class="btn btn-outline-secondary">
-                            Cancelar
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+  <div class="match-scorer__team">
+    <div class="match-scorer__badge">{{ match.away_team|slice:":3"|upper }}</div>
+    <span class="match-scorer__name">{{ match.away_team }}</span>
+  </div>
 </div>
+
+<!-- Errores del form -->
+{% if form.errors %}
+<div style="margin-bottom: var(--space-4);">
+  {% for field in form %}{% for error in field.errors %}
+  <div class="form-error"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+  {% endfor %}{% endfor %}
+</div>
+{% endif %}
+
+<!-- Info del partido -->
+<div class="card" style="margin-bottom: var(--space-5);">
+  <div class="card__body" style="display:flex;flex-direction:column;gap:var(--space-2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="text-muted text-sm"><i class="bi bi-calendar3"></i> {{ match.match_date|date:"d/m/Y · H:i" }}</span>
+      <span class="badge-pill badge-pill--open"><i class="bi bi-clock"></i> Abierto</span>
+    </div>
+    <div class="text-sm text-muted">
+      <i class="bi bi-tag"></i> {{ match.phase }}
+      &nbsp;·&nbsp;
+      <i class="bi bi-people"></i> {{ group.name }}
+    </div>
+  </div>
+</div>
+
+<!-- Formulario -->
+<form method="post" id="prediction-form">
+  {% csrf_token %}
+  <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-circle-fill"></i> Guardar pronóstico
+    </button>
+    <a href="{% url 'tournaments:detail' slug=group.slug tournament_id=tournament_id %}"
+       class="btn btn-secondary">
+      Cancelar
+    </a>
+  </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* Tap en el área del scorer enfoca el input correspondiente */
+  document.querySelectorAll('.match-scorer__input').forEach(function(input) {
+    input.addEventListener('focus', function() {
+      this.select();
+    });
+  });
+</script>
 {% endblock %}

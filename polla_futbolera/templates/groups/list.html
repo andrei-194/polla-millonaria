@@ -1,60 +1,53 @@
 {% extends "base.html" %}
 
 {% block title %}Mis Grupos — Polla Futbolera{% endblock %}
+{% block page_title %}Mis Grupos{% endblock %}
+{% block nav_groups %}active{% endblock %}
+
+{% block header_action %}
+<a href="{% url 'groups:create' %}" class="btn-icon" aria-label="Crear grupo">
+  <i class="bi bi-plus-lg"></i>
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h2 mb-0"><i class="bi bi-people-fill text-success"></i> Mis Grupos</h1>
-    <div>
-        <a href="{% url 'groups:create' %}" class="btn btn-success me-2">
-            <i class="bi bi-plus-circle"></i> Crear grupo
-        </a>
-        <a href="{% url 'groups:join' %}" class="btn btn-outline-success">
-            <i class="bi bi-door-open"></i> Unirse con código
-        </a>
-    </div>
-</div>
 
 {% if groups %}
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    {% for group in groups %}
-    <div class="col">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <a href="{% url 'groups:detail' slug=group.slug %}" class="text-decoration-none text-dark">
-                        <i class="bi bi-shield-fill-check text-success"></i> {{ group.name }}
-                    </a>
-                </h5>
-                {% if group.description %}
-                <p class="card-text text-muted small">{{ group.description|truncatechars:80 }}</p>
-                {% endif %}
-                <small class="text-muted">
-                    <i class="bi bi-calendar3"></i> Creado {{ group.created_at|date:"d/m/Y" }}
-                </small>
-            </div>
-            <div class="card-footer bg-transparent">
-                <a href="{% url 'groups:detail' slug=group.slug %}" class="btn btn-outline-success btn-sm">
-                    Ver grupo <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
+  {% for group in groups %}
+  <a href="{% url 'groups:detail' slug=group.slug %}" class="group-card">
+    <div class="group-card__icon">
+      <i class="bi bi-shield-fill"></i>
     </div>
-    {% endfor %}
-</div>
+    <div class="group-card__content">
+      <p class="group-card__name">{{ group.name }}</p>
+      <span class="group-card__meta">
+        {% if group.description %}{{ group.description|truncatechars:40 }}{% else %}Sin descripción{% endif %}
+      </span>
+    </div>
+    <i class="bi bi-chevron-right group-card__chevron"></i>
+  </a>
+  {% endfor %}
+
+  <div class="mt-4">
+    <a href="{% url 'groups:join' %}" class="btn btn-secondary">
+      <i class="bi bi-door-open"></i> Unirse con código
+    </a>
+  </div>
+
 {% else %}
-<div class="text-center py-5">
-    <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
-    <h3 class="mt-3 text-muted">Aún no perteneces a ningún grupo</h3>
-    <p class="text-muted">Crea un grupo o únete a uno con un código de invitación.</p>
-    <div>
-        <a href="{% url 'groups:create' %}" class="btn btn-success me-2">
-            <i class="bi bi-plus-circle"></i> Crear grupo
-        </a>
-        <a href="{% url 'groups:join' %}" class="btn btn-outline-success">
-            <i class="bi bi-door-open"></i> Unirse con código
-        </a>
+  <div class="empty-state">
+    <i class="bi bi-people empty-state__icon"></i>
+    <h2 class="empty-state__title">Sin grupos aún</h2>
+    <p class="empty-state__subtitle">Creá tu grupo o unite con un código de invitación.</p>
+    <div style="display:flex;flex-direction:column;gap:var(--space-3);width:100%;max-width:280px;">
+      <a href="{% url 'groups:create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Crear grupo
+      </a>
+      <a href="{% url 'groups:join' %}" class="btn btn-secondary">
+        <i class="bi bi-door-open"></i> Unirse con código
+      </a>
     </div>
-</div>
+  </div>
 {% endif %}
+
 {% endblock %}

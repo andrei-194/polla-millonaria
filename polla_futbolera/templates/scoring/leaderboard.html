@@ -1,92 +1,70 @@
 {% extends "base.html" %}
 
-{% block title %}Tabla de posiciones — {{ tournament.name }}{% endblock %}
+{% block title %}Ranking — {{ tournament.name }}{% endblock %}
+{% block page_title %}Ranking{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'tournaments:detail' slug=group.slug tournament_id=tournament.id %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'groups:list' %}">Grupos</a></li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'groups:detail' slug=group.slug %}">{{ group.name }}</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'tournaments:detail' slug=group.slug tournament_id=tournament.id %}">
-                    {{ tournament.name }}
-                </a>
-            </li>
-            <li class="breadcrumb-item active">Tabla</li>
-        </ol>
-    </nav>
-    <h1 class="h2">
-        <i class="bi bi-bar-chart-fill text-warning"></i> Tabla de posiciones
-    </h1>
+
+<div style="text-align:center;margin-bottom:var(--space-5);">
+  <div class="font-semibold">{{ tournament.name }}</div>
+  <div class="text-xs text-muted">{{ group.name }}</div>
+</div>
+
+<!-- Sistema de puntos -->
+<div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);margin-bottom:var(--space-5);display:flex;justify-content:space-around;font-size:var(--text-xs);color:var(--color-text-secondary);">
+  <span><strong style="color:var(--color-text-primary);">3pts</strong> Exacto</span>
+  <span><strong style="color:var(--color-text-primary);">2pts</strong> Diferencia</span>
+  <span><strong style="color:var(--color-text-primary);">1pt</strong> Ganador</span>
+  <span><strong style="color:var(--color-text-primary);">0pts</strong> Fallo</span>
 </div>
 
 {% if leaderboard %}
-<div class="card shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark">
-                <tr>
-                    <th class="text-center" style="width: 60px;">#</th>
-                    <th>Jugador</th>
-                    <th class="text-center">Puntos</th>
-                    <th class="text-center">Exactos</th>
-                    <th class="text-center">Ganador</th>
-                    <th class="text-center">Fallados</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in leaderboard %}
-                <tr {% if entry.user_id == request.user.id %}class="table-warning"{% endif %}>
-                    <td class="text-center">
-                        {% if forloop.counter == 1 %}
-                        <i class="bi bi-trophy-fill text-warning fs-5"></i>
-                        {% elif forloop.counter == 2 %}
-                        <i class="bi bi-trophy-fill text-secondary fs-5"></i>
-                        {% elif forloop.counter == 3 %}
-                        <i class="bi bi-trophy-fill text-danger fs-5"></i>
-                        {% else %}
-                        <span class="text-muted">{{ forloop.counter }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <i class="bi bi-person-circle text-muted"></i>
-                        <strong>{{ entry.username }}</strong>
-                        {% if entry.user_id == request.user.id %}
-                        <span class="badge bg-warning text-dark ms-1">Tú</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center">
-                        <span class="badge bg-success fs-6">{{ entry.total_points }}</span>
-                    </td>
-                    <td class="text-center">
-                        <span class="badge bg-primary">{{ entry.exact_count }}</span>
-                    </td>
-                    <td class="text-center">
-                        <span class="badge bg-info text-dark">{{ entry.winner_count }}</span>
-                    </td>
-                    <td class="text-center">
-                        <span class="badge bg-secondary">{{ entry.miss_count }}</span>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="leaderboard-list">
+  {% for entry in leaderboard %}
+  <div class="leaderboard-row {% if forloop.counter <= 3 %}leaderboard-row--podium{% endif %} {% if entry.user_id == request.user.id %}leaderboard-row--me{% endif %}">
+    <span class="leaderboard-row__rank">
+      {% if forloop.counter == 1 %}
+        <i class="bi bi-trophy-fill" style="color: var(--color-gold); font-size: 1.1rem;"></i>
+      {% elif forloop.counter == 2 %}
+        <i class="bi bi-trophy-fill" style="color: #94a3b8; font-size: 1.1rem;"></i>
+      {% elif forloop.counter == 3 %}
+        <i class="bi bi-trophy-fill" style="color: #b45309; font-size: 1.1rem;"></i>
+      {% else %}
+        #{{ forloop.counter }}
+      {% endif %}
+    </span>
+
+    <div class="leaderboard-row__user">
+      <span class="leaderboard-row__name">
+        {{ entry.username }}
+        {% if entry.user_id == request.user.id %}
+        <span class="badge-pill badge-pill--open" style="margin-left:4px;">Tú</span>
+        {% endif %}
+      </span>
+      <span class="leaderboard-row__detail">
+        {{ entry.exact_count }} exactos · {{ entry.winner_count }} ganador
+      </span>
     </div>
+
+    <span class="leaderboard-row__pts">
+      {{ entry.total_points }} <small>pts</small>
+    </span>
+  </div>
+  {% endfor %}
 </div>
 
-<div class="mt-3">
-    <small class="text-muted">
-        <strong>Puntos:</strong> Exacto = 3pts &bull; Diferencia correcta = 2pts &bull; Ganador correcto = 1pt
-    </small>
-</div>
 {% else %}
-<div class="text-center py-5 text-muted">
-    <i class="bi bi-bar-chart" style="font-size: 4rem;"></i>
-    <h3 class="mt-3">Aún no hay puntuaciones</h3>
-    <p>Las puntuaciones se calculan automáticamente cuando hay resultados de partidos.</p>
+<div class="empty-state">
+  <i class="bi bi-bar-chart empty-state__icon"></i>
+  <h2 class="empty-state__title">Sin puntuaciones</h2>
+  <p class="empty-state__subtitle">Se calculan automáticamente al terminar los partidos.</p>
 </div>
 {% endif %}
+
 {% endblock %}

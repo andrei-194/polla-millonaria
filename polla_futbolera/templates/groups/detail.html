@@ -1,103 +1,102 @@
 {% extends "base.html" %}
 
 {% block title %}{{ group.name }} — Polla Futbolera{% endblock %}
+{% block page_title %}{{ group.name }}{% endblock %}
+{% block nav_groups %}active{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'groups:list' %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block header_action %}
+{% if membership.is_admin %}
+<a href="{% url 'groups:invite' slug=group.slug %}" class="btn-icon" aria-label="Invitar">
+  <i class="bi bi-share"></i>
+</a>
+{% else %}
+<span class="btn-icon btn-icon--placeholder"></span>
+{% endif %}
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h1 class="h2 mb-1">
-            <i class="bi bi-shield-fill-check text-success"></i> {{ group.name }}
-        </h1>
-        {% if group.description %}
-        <p class="text-muted">{{ group.description }}</p>
-        {% endif %}
-    </div>
-    <div class="d-flex gap-2">
-        {% if membership.is_admin %}
-        <a href="{% url 'groups:invite' slug=group.slug %}" class="btn btn-outline-success btn-sm">
-            <i class="bi bi-share"></i> Invitar
+
+<!-- Torneos activos -->
+<div class="section-title">Torneos activos</div>
+
+{% if group_tournaments %}
+  {% for gt in group_tournaments %}
+  <div class="card" style="margin-bottom: var(--space-3);">
+    <div class="card__body">
+      <div class="flex items-center justify-between" style="margin-bottom: var(--space-3);">
+        <div>
+          <div class="font-semibold">{{ gt.tournament.name }}</div>
+          <div class="text-xs text-muted">{{ gt.tournament.season }}</div>
+        </div>
+        <i class="bi bi-trophy-fill" style="color: var(--color-gold); font-size: 1.5rem;"></i>
+      </div>
+      <div style="display:flex;gap:var(--space-2);">
+        <a href="{% url 'tournaments:detail' slug=group.slug tournament_id=gt.tournament.id %}"
+           class="btn btn-primary btn-sm" style="flex:1;">
+          <i class="bi bi-calendar3"></i> Partidos
         </a>
-        <a href="{% url 'tournaments:activate' slug=group.slug %}" class="btn btn-success btn-sm">
-            <i class="bi bi-plus"></i> Agregar torneo
+        <a href="{% url 'scoring:leaderboard' slug=group.slug tournament_id=gt.tournament.id %}"
+           class="btn btn-secondary btn-sm" style="flex:1;">
+          <i class="bi bi-bar-chart"></i> Ranking
         </a>
-        {% endif %}
+      </div>
     </div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="empty-state" style="padding: var(--space-6);">
+    <i class="bi bi-trophy empty-state__icon"></i>
+    <p class="empty-state__subtitle">No hay torneos activos en este grupo.</p>
+  </div>
+{% endif %}
+
+{% if membership.is_admin %}
+<a href="{% url 'tournaments:activate' slug=group.slug %}" class="btn btn-secondary" style="margin-bottom: var(--space-5);">
+  <i class="bi bi-plus"></i> Agregar torneo
+</a>
+{% endif %}
+
+<!-- Miembros -->
+<div class="section-title">Miembros ({{ members|length }})</div>
+
+<div style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--color-border);">
+  {% for m in members %}
+  <div class="list-row" style="{% if not forloop.last %}border-bottom: 1px solid var(--color-border);{% endif %}">
+    <div class="avatar avatar--sm">{{ m.user.username|first|upper }}</div>
+    <div class="list-row__content">
+      <div class="list-row__label">
+        {{ m.user.username }}
+        {% if m.role == "admin" %}
+        <span class="badge-pill badge-pill--open" style="margin-left: 4px;">Admin</span>
+        {% endif %}
+      </div>
+    </div>
+    {% if membership.is_admin and m.user != request.user and m.role != "admin" %}
+    <form method="post"
+          action="{% url 'groups:member_remove' slug=group.slug user_id=m.user.id %}"
+          onsubmit="return confirm('¿Expulsar a {{ m.user.username }}?')">
+      {% csrf_token %}
+      <button type="submit" class="btn-icon" style="background: #fee2e2; color: var(--color-danger);" aria-label="Expulsar">
+        <i class="bi bi-person-x"></i>
+      </button>
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
 </div>
 
-<div class="row g-4">
-    <!-- Torneos activos -->
-    <div class="col-md-8">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-trophy"></i> Torneos activos</h5>
-            </div>
-            <div class="card-body">
-                {% if group_tournaments %}
-                <div class="list-group list-group-flush">
-                    {% for gt in group_tournaments %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <div>
-                            <strong>{{ gt.tournament.name }}</strong>
-                            <small class="text-muted d-block">{{ gt.tournament.season }}</small>
-                        </div>
-                        <div class="btn-group btn-group-sm">
-                            <a href="{% url 'tournaments:detail' slug=group.slug tournament_id=gt.tournament.id %}"
-                               class="btn btn-outline-primary">
-                                <i class="bi bi-calendar3"></i> Partidos
-                            </a>
-                            <a href="{% url 'scoring:leaderboard' slug=group.slug tournament_id=gt.tournament.id %}"
-                               class="btn btn-outline-warning">
-                                <i class="bi bi-bar-chart"></i> Tabla
-                            </a>
-                            <a href="{% url 'predictions:group_predictions' slug=group.slug tournament_id=gt.tournament.id %}"
-                               class="btn btn-outline-info">
-                                <i class="bi bi-eye"></i> Pronósticos
-                            </a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-muted text-center py-3">
-                    No hay torneos activos.
-                    {% if membership.is_admin %}
-                    <a href="{% url 'tournaments:activate' slug=group.slug %}">Agregar uno</a>.
-                    {% endif %}
-                </p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Miembros -->
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-people"></i> Miembros ({{ members|length }})</h5>
-            </div>
-            <ul class="list-group list-group-flush">
-                {% for m in members %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="bi bi-person-circle text-muted"></i> {{ m.user.username }}
-                        {% if m.role == "admin" %}
-                        <span class="badge bg-success ms-1">Admin</span>
-                        {% endif %}
-                    </div>
-                    {% if membership.is_admin and m.user != request.user and m.role != "admin" %}
-                    <form method="post"
-                          action="{% url 'groups:member_remove' slug=group.slug user_id=m.user.id %}"
-                          onsubmit="return confirm('¿Expulsar a {{ m.user.username }}?')">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                            <i class="bi bi-person-x"></i>
-                        </button>
-                    </form>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
+{% if membership.is_admin %}
+<div style="margin-top: var(--space-4);">
+  <a href="{% url 'groups:invite' slug=group.slug %}" class="btn btn-secondary">
+    <i class="bi bi-person-plus"></i> Invitar miembro
+  </a>
 </div>
+{% endif %}
+
 {% endblock %}

@@ -1,97 +1,99 @@
 {% extends "base.html" %}
 
 {% block title %}Mi Perfil — Polla Futbolera{% endblock %}
+{% block page_title %}Mi Perfil{% endblock %}
+{% block nav_profile %}active{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body text-center p-4">
-                {% if form.instance.avatar %}
-                <img
-                    src="{{ form.instance.avatar.url }}"
-                    alt="Avatar"
-                    class="rounded-circle mb-3"
-                    width="100"
-                    height="100"
-                    style="object-fit: cover;"
-                >
-                {% else %}
-                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                     style="width: 100px; height: 100px; font-size: 2.5rem;">
-                    {{ user.username|first|upper }}
-                </div>
-                {% endif %}
-                <h3 class="fw-bold">{{ user.username }}</h3>
-                <p class="text-muted">{{ user.email }}</p>
-            </div>
-        </div>
 
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="bi bi-bar-chart-fill"></i> Estadísticas</h5>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-6 mb-3">
-                        <div class="h4 fw-bold text-success">{{ form.instance.total_points }}</div>
-                        <small class="text-muted">Puntos totales</small>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <div class="h4 fw-bold text-primary">
-                            {{ form.instance.accuracy_percentage|floatformat:1 }}%
-                        </div>
-                        <small class="text-muted">Precisión</small>
-                    </div>
-                    <div class="col-6">
-                        <div class="h5 fw-bold">{{ form.instance.total_predictions }}</div>
-                        <small class="text-muted">Pronósticos</small>
-                    </div>
-                    <div class="col-6">
-                        <div class="h5 fw-bold text-warning">{{ form.instance.correct_predictions }}</div>
-                        <small class="text-muted">Correctos</small>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Avatar + nombre -->
+<div class="text-center" style="padding: 1.5rem 0 1rem;">
+  {% if form.instance.avatar %}
+    <img src="{{ form.instance.avatar.url }}" alt="Avatar"
+         class="avatar avatar--lg" style="margin: 0 auto 0.75rem;">
+  {% else %}
+    <div class="avatar avatar--lg" style="margin: 0 auto 0.75rem; font-size: 2rem;">
+      {{ user.username|first|upper }}
     </div>
-
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Editar perfil</h5>
-            </div>
-            <div class="card-body p-4">
-                <form method="post" enctype="multipart/form-data" action="{% url 'accounts:profile' %}">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="{{ form.bio.id_for_label }}" class="form-label fw-semibold">Bio</label>
-                        <textarea
-                            class="form-control"
-                            id="{{ form.bio.id_for_label }}"
-                            name="bio"
-                            rows="4"
-                        >{{ form.bio.value|default:'' }}</textarea>
-                    </div>
-                    <div class="mb-4">
-                        <label for="{{ form.avatar.id_for_label }}" class="form-label fw-semibold">Avatar</label>
-                        <input
-                            type="file"
-                            class="form-control"
-                            id="{{ form.avatar.id_for_label }}"
-                            name="avatar"
-                            accept="image/*"
-                        >
-                    </div>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save"></i> Guardar cambios
-                    </button>
-                    <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-secondary ms-2">
-                        <i class="bi bi-key"></i> Cambiar contraseña
-                    </a>
-                </form>
-            </div>
-        </div>
-    </div>
+  {% endif %}
+  <div style="font-size: var(--text-xl); font-weight: var(--font-bold);">{{ user.username }}</div>
+  <div class="text-muted text-sm">{{ user.email }}</div>
 </div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-card__value">{{ form.instance.total_points }}</div>
+    <div class="stat-card__label">Puntos totales</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__value">{{ form.instance.accuracy_percentage|floatformat:0 }}%</div>
+    <div class="stat-card__label">Precisión</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__value">{{ form.instance.total_predictions }}</div>
+    <div class="stat-card__label">Pronósticos</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__value">{{ form.instance.correct_predictions }}</div>
+    <div class="stat-card__label">Correctos</div>
+  </div>
+</div>
+
+<!-- Editar bio y avatar -->
+<div class="section-title">Editar perfil</div>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <div class="form-field">
+    <label class="form-label" for="{{ form.bio.id_for_label }}">Bio</label>
+    <textarea
+      id="{{ form.bio.id_for_label }}"
+      name="bio"
+      class="form-input"
+      rows="3"
+      placeholder="Contá algo sobre vos..."
+      style="min-height: auto; resize: none;"
+    >{{ form.bio.value|default:'' }}</textarea>
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="{{ form.avatar.id_for_label }}">Foto de perfil</label>
+    <input type="file" id="{{ form.avatar.id_for_label }}"
+           name="avatar" accept="image/jpeg,image/png,image/webp"
+           class="form-input" style="padding: 12px;">
+    <div class="text-xs text-muted" style="margin-top: 4px;">JPG, PNG o WEBP · máx. 2 MB</div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">
+    <i class="bi bi-check-circle"></i> Guardar cambios
+  </button>
+</form>
+
+<!-- Ajustes de cuenta -->
+<div class="section-title mt-5">Cuenta</div>
+
+<div style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--color-border);">
+  <a href="{% url 'accounts:password_change' %}" class="list-row">
+    <div class="list-row__icon"><i class="bi bi-key"></i></div>
+    <div class="list-row__content">
+      <div class="list-row__label">Cambiar contraseña</div>
+    </div>
+    <i class="bi bi-chevron-right list-row__chevron"></i>
+  </a>
+
+  <form method="post" action="{% url 'accounts:logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="list-row w-full" style="background:none; border:none; cursor:pointer; color: var(--color-danger); border-top: 1px solid var(--color-border);">
+      <div class="list-row__icon" style="background: #fee2e2; color: var(--color-danger);">
+        <i class="bi bi-box-arrow-right"></i>
+      </div>
+      <div class="list-row__content">
+        <div class="list-row__label">Cerrar sesión</div>
+      </div>
+    </button>
+  </form>
+</div>
+
 {% endblock %}

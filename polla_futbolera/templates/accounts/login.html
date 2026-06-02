@@ -2,50 +2,57 @@
 
 {% block title %}Iniciar sesión — Polla Futbolera{% endblock %}
 
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h2 class="card-title text-center mb-4">
-                    <i class="bi bi-box-arrow-in-right text-success"></i> Iniciar sesión
-                </h2>
-                <form method="post" action="{% url 'accounts:login' %}">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="username" class="form-label fw-semibold">Usuario</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="username"
-                            name="username"
-                            required
-                            autofocus
-                        >
-                    </div>
-                    <div class="mb-4">
-                        <label for="password" class="form-label fw-semibold">Contraseña</label>
-                        <input
-                            type="password"
-                            class="form-control"
-                            id="password"
-                            name="password"
-                            required
-                        >
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-success btn-lg">
-                            Entrar
-                        </button>
-                    </div>
-                </form>
-                <hr>
-                <p class="text-center mb-0">
-                    ¿No tienes cuenta?
-                    <a href="{% url 'accounts:register' %}" class="text-success fw-semibold">Regístrate</a>
-                </p>
-            </div>
-        </div>
+{% block full_page %}
+<div class="auth-screen">
+
+  <div class="auth-brand">
+    <i class="bi bi-trophy-fill auth-brand__icon"></i>
+    <div class="auth-brand__name">Polla Futbolera</div>
+    <div class="auth-brand__tagline">Pronosticá. Competí. Ganá.</div>
+  </div>
+
+  {% if messages %}
+  <div style="width:100%;max-width:400px;margin-bottom:1rem;display:flex;flex-direction:column;gap:8px;">
+    {% for message in messages %}
+    <div class="app-toast app-toast--{% if message.tags == 'error' %}error{% else %}info{% endif %}">
+      {{ message }}
     </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="auth-card">
+    <h2 class="auth-card__title">Iniciar sesión</h2>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="form-field">
+        <label class="form-label" for="id_username">Usuario</label>
+        <input type="text" id="id_username" name="username"
+               class="form-input" placeholder="Tu nombre de usuario"
+               autocomplete="username" autofocus required>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="id_password">Contraseña</label>
+        <input type="password" id="id_password" name="password"
+               class="form-input" placeholder="••••••••"
+               autocomplete="current-password" required>
+      </div>
+
+      <div class="mt-5">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-box-arrow-in-right"></i> Entrar
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="auth-footer">
+    ¿No tenés cuenta?
+    <a href="{% url 'accounts:register' %}">Registrarse →</a>
+  </div>
+
 </div>
-{% endblock %}
+{% endblock full_page %}

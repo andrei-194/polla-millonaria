@@ -1,114 +1,118 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tournament.name }} — {{ group.name }}{% endblock %}
+{% block title %}{{ tournament.name }} — Polla Futbolera{% endblock %}
+{% block page_title %}{{ tournament.name }}{% endblock %}
+{% block nav_tournaments %}active{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'groups:detail' slug=group.slug %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block header_action %}
+{% if membership.is_admin %}
+<form method="post" action="{% url 'tournaments:sync' slug=group.slug tournament_id=tournament.id %}">
+  {% csrf_token %}
+  <button type="submit" class="btn-icon" aria-label="Sincronizar">
+    <i class="bi bi-arrow-repeat"></i>
+  </button>
+</form>
+{% else %}
+<span class="btn-icon btn-icon--placeholder"></span>
+{% endif %}
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-1">
-                <li class="breadcrumb-item">
-                    <a href="{% url 'groups:list' %}">Grupos</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{% url 'groups:detail' slug=group.slug %}">{{ group.name }}</a>
-                </li>
-                <li class="breadcrumb-item active">{{ tournament.name }}</li>
-            </ol>
-        </nav>
-        <h1 class="h2 mb-0">
-            <i class="bi bi-trophy text-warning"></i> {{ tournament.name }}
-            <small class="text-muted fs-5">{{ tournament.season }}</small>
-        </h1>
-    </div>
-    <div class="d-flex gap-2">
-        <a href="{% url 'predictions:group_predictions' slug=group.slug tournament_id=tournament.id %}"
-           class="btn btn-outline-info btn-sm">
-            <i class="bi bi-eye"></i> Ver pronósticos
-        </a>
-        <a href="{% url 'scoring:leaderboard' slug=group.slug tournament_id=tournament.id %}"
-           class="btn btn-outline-warning btn-sm">
-            <i class="bi bi-bar-chart"></i> Tabla
-        </a>
-        {% if membership.is_admin %}
-        <form method="post"
-              action="{% url 'tournaments:sync' slug=group.slug tournament_id=tournament.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-repeat"></i> Sincronizar
-            </button>
-        </form>
-        {% endif %}
-    </div>
+
+<!-- Accesos rápidos -->
+<div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-5);">
+  <a href="{% url 'predictions:group_predictions' slug=group.slug tournament_id=tournament.id %}"
+     class="btn btn-secondary btn-sm" style="flex:1;">
+    <i class="bi bi-eye"></i> Pronósticos
+  </a>
+  <a href="{% url 'scoring:leaderboard' slug=group.slug tournament_id=tournament.id %}"
+     class="btn btn-secondary btn-sm" style="flex:1;">
+    <i class="bi bi-bar-chart"></i> Ranking
+  </a>
 </div>
 
 {% if matches %}
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead class="table-success">
-            <tr>
-                <th>Fecha</th>
-                <th>Fase</th>
-                <th class="text-center">Partido</th>
-                <th class="text-center">Resultado</th>
-                <th class="text-center">Estado</th>
-                <th class="text-center">Acción</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for match in matches %}
-            <tr>
-                <td>
-                    <small>{{ match.match_date|date:"d/m/Y" }}<br>{{ match.match_date|date:"H:i" }}</small>
-                </td>
-                <td>
-                    <small class="text-muted">{{ match.phase }}</small>
-                </td>
-                <td class="text-center fw-semibold">
-                    {{ match.home_team }} vs {{ match.away_team }}
-                </td>
-                <td class="text-center">
-                    {% if match.has_result %}
-                    <span class="badge bg-dark fs-6">
-                        {{ match.home_score }} — {{ match.away_score }}
-                    </span>
-                    {% else %}
-                    <span class="text-muted">—</span>
-                    {% endif %}
-                </td>
-                <td class="text-center">
-                    {% if match.status == "scheduled" %}
-                    <span class="badge bg-secondary">Programado</span>
-                    {% elif match.status == "in_progress" %}
-                    <span class="badge bg-danger">En curso</span>
-                    {% elif match.status == "finished" %}
-                    <span class="badge bg-success">Finalizado</span>
-                    {% else %}
-                    <span class="badge bg-warning text-dark">Postergado</span>
-                    {% endif %}
-                </td>
-                <td class="text-center">
-                    {% if match.status == "scheduled" %}
-                    <a href="{% url 'predictions:predict' slug=group.slug tournament_id=tournament.id match_id=match.id %}"
-                       class="btn btn-success btn-sm">
-                        <i class="bi bi-pencil"></i> Pronosticar
-                    </a>
-                    {% else %}
-                    <span class="text-muted small">Cerrado</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% else %}
-<div class="text-center py-5">
-    <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
-    <h3 class="mt-3 text-muted">No hay partidos cargados</h3>
-    {% if membership.is_admin %}
-    <p class="text-muted">Usa el botón "Sincronizar" para cargar los partidos desde la API.</p>
+
+  {% regroup matches by match_date|date:"Y-m-d" as matches_by_date %}
+
+  {% for date_group in matches_by_date %}
+  <div class="divider-label">{{ date_group.grouper|date:"l d M" }}</div>
+
+  {% for match in date_group.list %}
+  <div class="match-card">
+    <div class="match-card__header">
+      <span>{{ match.phase }}</span>
+      <span>{{ match.match_date|date:"H:i" }}</span>
+    </div>
+
+    <div class="match-card__body">
+      <div class="match-card__teams">
+        <div class="match-card__team">
+          <div class="match-card__team-badge">{{ match.home_team|slice:":3"|upper }}</div>
+          <div class="match-card__team-name">{{ match.home_team }}</div>
+        </div>
+
+        {% if match.status == "finished" or match.status == "in_progress" %}
+        <div class="match-card__score">
+          <span>{{ match.home_score|default:"—" }}</span>
+          <span class="match-card__score-sep">:</span>
+          <span>{{ match.away_score|default:"—" }}</span>
+        </div>
+        {% else %}
+        <div class="match-card__vs">vs</div>
+        {% endif %}
+
+        <div class="match-card__team">
+          <div class="match-card__team-badge">{{ match.away_team|slice:":3"|upper }}</div>
+          <div class="match-card__team-name">{{ match.away_team }}</div>
+        </div>
+      </div>
+
+      <!-- Estado del partido -->
+      <div style="display:flex;justify-content:center;margin-bottom:var(--space-3);">
+        {% if match.status == "in_progress" %}
+          <span class="badge-pill badge-pill--live"><i class="bi bi-circle-fill" style="font-size:8px;"></i> En curso</span>
+        {% elif match.status == "finished" %}
+          <span class="badge-pill badge-pill--done"><i class="bi bi-check-circle"></i> Finalizado</span>
+        {% elif match.status == "scheduled" %}
+          <span class="badge-pill badge-pill--open"><i class="bi bi-clock"></i> Programado</span>
+        {% else %}
+          <span class="badge-pill badge-pill--closing">Postergado</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Acción -->
+    {% if match.status == "scheduled" %}
+    <div class="match-card__footer">
+      <a href="{% url 'predictions:predict' slug=group.slug tournament_id=tournament.id match_id=match.id %}"
+         class="btn btn-primary btn-sm">
+        <i class="bi bi-pencil-fill"></i> Pronosticar
+      </a>
+    </div>
     {% endif %}
-</div>
+  </div>
+  {% endfor %}
+  {% endfor %}
+
+{% else %}
+  <div class="empty-state">
+    <i class="bi bi-calendar-x empty-state__icon"></i>
+    <h2 class="empty-state__title">Sin partidos</h2>
+    <p class="empty-state__subtitle">
+      {% if membership.is_admin %}
+        Usá el botón de sincronizar (↻) para cargar los partidos.
+      {% else %}
+        El administrador del grupo aún no sincronizó los partidos.
+      {% endif %}
+    </p>
+  </div>
 {% endif %}
+
 {% endblock %}
