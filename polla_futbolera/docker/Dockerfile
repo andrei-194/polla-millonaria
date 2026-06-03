@@ -6,24 +6,20 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements/production.txt requirements/production.txt
-COPY requirements/base.txt requirements/base.txt
+# El contexto de build es la raíz del repo; los sources están en polla_futbolera/
+COPY polla_futbolera/requirements/base.txt requirements/base.txt
+COPY polla_futbolera/requirements/production.txt requirements/production.txt
 RUN pip install --no-cache-dir -r requirements/production.txt
 
-# Copy project
-COPY . .
+COPY polla_futbolera/ .
 
-# Make entrypoint executable
 RUN chmod +x docker/entrypoint.sh
 
-# Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
