@@ -16,11 +16,17 @@ class TipoEventoAdmin(admin.ModelAdmin):
 @admin.register(EventoPartido)
 class EventoPartidoAdmin(admin.ModelAdmin):
     list_display = ("partido", "quiniela", "tipo_evento", "estado", "resultado", "plazo_cierre")
-    list_filter = ("estado", "quiniela", "tipo_evento")
+    list_editable = ("resultado", "estado")
+    list_filter = ("estado", "quiniela", "tipo_evento", "partido__fecha")
     search_fields = ("partido__home_team__name", "partido__away_team__name")
     actions = ["calcular_puntos"]
 
     def calcular_puntos(self, request, queryset):
+        """
+        Calcula puntos solo para los EventoPartido seleccionados.
+        Útil para recalcular eventos individuales o corregir un resultado.
+        Para procesar una fecha completa de una vez, usar la acción en el admin de Fechas.
+        """
         from apps.scoring.application.services import ScoringService
         from apps.scoring.domain.exceptions import EventoSinResultadoError
         service = ScoringService()
@@ -32,11 +38,16 @@ class EventoPartidoAdmin(admin.ModelAdmin):
             except EventoSinResultadoError:
                 self.message_user(
                     request,
-                    f"El evento {evento} no tiene resultado registrado",
+                    f"El evento '{evento}' no tiene resultado — completalo antes de calcular.",
                     level=messages.WARNING,
                 )
         if ok:
-            self.message_user(request, f"Puntos calculados para {ok} evento(s)")
+            self.message_user(
+                request,
+                f"✓ Puntos calculados para {ok} evento(s). "
+                "Acordate de recalcular el ranking desde el admin de Fechas.",
+                level=messages.SUCCESS,
+            )
 
     calcular_puntos.short_description = "Calcular puntos para los eventos seleccionados"
 

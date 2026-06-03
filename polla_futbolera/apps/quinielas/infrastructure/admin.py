@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from .models import Quiniela, Inscripcion
 
 
@@ -8,6 +8,20 @@ class QuinielaAdmin(admin.ModelAdmin):
     list_filter = ("status", "tournament")
     prepopulated_fields = {"slug": ("name",)}
     search_fields = ("name",)
+    actions = ["recalcular_ranking_acumulado"]
+
+    @admin.action(description="▶ Recalcular ranking acumulado de las quinielas seleccionadas")
+    def recalcular_ranking_acumulado(self, request, queryset):
+        """Recalcula el RankingAcumulado a partir de las PuntuacionEvento existentes."""
+        from apps.scoring.application.services import RankingService
+        svc = RankingService()
+        for quiniela in queryset:
+            svc.recalcular_ranking_acumulado(quiniela.id)
+        self.message_user(
+            request,
+            f"✓ Ranking acumulado recalculado para {queryset.count()} quiniela(s).",
+            messages.SUCCESS,
+        )
 
 
 @admin.register(Inscripcion)
