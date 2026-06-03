@@ -29,42 +29,34 @@ class FechaAdmin(admin.ModelAdmin):
           1. Calcula puntos por cada EventoPartido con resultado (todas las quinielas).
           2. Recalcula RankingFecha por cada quiniela × fecha procesada.
           3. Recalcula RankingAcumulado por cada quiniela afectada.
-
-        Usar después de haber registrado el `resultado` en cada EventoPartido.
         """
         from apps.predictions.infrastructure.models import EventoPartido
         from apps.scoring.application.services import RankingService, ScoringService
-        from apps.scoring.domain.exceptions import EventoSinResultadoError
 
         scoring_svc = ScoringService()
         ranking_svc = RankingService()
 
         eventos_ok = 0
         eventos_sin_resultado = 0
-        fechas_quinielas = set()   # (quiniela_id, fecha_id)
-        quinielas = set()
+        fechas_quinielas: set[tuple[int, int]] = set()
 
         for fecha in queryset:
-            eventos = (
+            quiniela_ids = (
                 EventoPartido.objects
                 .filter(partido__fecha=fecha)
-                .select_related("quiniela")
+                .values_list("quiniela_id", flat=True)
+                .distinct()
             )
-            for evento in eventos:
-                if not evento.resultado:
-                    eventos_sin_resultado += 1
-                    continue
-                try:
-                    scoring_svc.calcular_puntos_evento(evento.id)
-                    eventos_ok += 1
-                    fechas_quinielas.add((evento.quiniela_id, fecha.id))
-                    quinielas.add(evento.quiniela_id)
-                except EventoSinResultadoError:
-                    eventos_sin_resultado += 1
+            for quiniela_id in quiniela_ids:
+                resultado = scoring_svc.calcular_puntos_fecha(quiniela_id, fecha.id)
+                eventos_ok += resultado["ok"]
+                eventos_sin_resultado += len(resultado["sin_resultado"])
+                if resultado["ok"]:
+                    fechas_quinielas.add((quiniela_id, fecha.id))
 
+        quinielas = {q for q, _ in fechas_quinielas}
         for quiniela_id, fecha_id in fechas_quinielas:
             ranking_svc.recalcular_ranking_fecha(quiniela_id, fecha_id)
-
         for quiniela_id in quinielas:
             ranking_svc.recalcular_ranking_acumulado(quiniela_id)
 
