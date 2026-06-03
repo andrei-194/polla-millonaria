@@ -1,0 +1,39 @@
+{% comment %}
+Partial reutilizable de paginación.
+Uso: {% include "partials/paginacion.html" with page_obj=page_obj %}
+Parámetro opcional `extra_params` para preservar otros query params (ej: "q=foo&otro=x").
+{% endcomment %}
+{% if page_obj.has_other_pages %}
+<nav aria-label="Paginación" style="display:flex;justify-content:center;align-items:center;gap:var(--s2);margin-top:var(--s5);flex-wrap:wrap;">
+
+  {% if page_obj.has_previous %}
+  <a href="?{% if extra_params %}{{ extra_params }}&{% endif %}{{ page_param|default:"page" }}={{ page_obj.previous_page_number }}"
+     class="btn btn-secondary btn-sm" aria-label="Página anterior">
+    <i class="bi bi-chevron-left"></i>
+  </a>
+  {% else %}
+  <button class="btn btn-secondary btn-sm" disabled aria-label="Página anterior">
+    <i class="bi bi-chevron-left"></i>
+  </button>
+  {% endif %}
+
+  <span class="text-xs text-muted" style="padding:0 var(--s2);">
+    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+  </span>
+
+  {% if page_obj.has_next %}
+  <a href="?{% if extra_params %}{{ extra_params }}&{% endif %}{{ page_param|default:"page" }}={{ page_obj.next_page_number }}"
+     class="btn btn-secondary btn-sm" aria-label="Página siguiente">
+    <i class="bi bi-chevron-right"></i>
+  </a>
+  {% else %}
+  <button class="btn btn-secondary btn-sm" disabled aria-label="Página siguiente">
+    <i class="bi bi-chevron-right"></i>
+  </button>
+  {% endif %}
+
+</nav>
+<div class="text-xs text-muted" style="text-align:center;margin-top:var(--s2);">
+  {{ page_obj.paginator.count }} registro{{ page_obj.paginator.count|pluralize:"s" }} en total
+</div>
+{% endif %}

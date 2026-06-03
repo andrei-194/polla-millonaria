@@ -1,3 +1,5 @@
+from django.core.paginator import Paginator
+from django.db.models import Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
@@ -9,14 +11,18 @@ from ..application.dtos import CrearPronosticoEventoDTO
 from ..domain.exceptions import ValorInvalidoError, EventoCerradoError
 from .models import EventoPartido, PronosticoEvento
 
+
 @jugador_required
 def fechas_list_view(request, slug):
     quiniela = get_object_or_404(Quiniela, slug=slug)
     get_object_or_404(Inscripcion, jugador=request.user, quiniela=quiniela, activa=True)
 
-    fechas = Fecha.objects.filter(
-        torneo=quiniela.tournament
-    ).prefetch_related("partidos").order_by("numero")
+    fechas = (
+        Fecha.objects
+        .filter(torneo=quiniela.tournament)
+        .annotate(num_partidos=Count("partidos"))
+        .order_by("numero")
+    )
 
     return render(request, "predictions/fechas_list.html", {
         "quiniela": quiniela,
@@ -30,25 +36,43 @@ def fecha_detail_view(request, slug, numero):
     get_object_or_404(Inscripcion, jugador=request.user, quiniela=quiniela, activa=True)
     fecha = get_object_or_404(Fecha, torneo=quiniela.tournament, numero=numero)
 
-    partidos = fecha.partidos.select_related("home_team", "away_team").order_by("match_date")
-    partidos_con_eventos = []
-    for partido in partidos:
-        eventos = list(
-            EventoPartido.objects.filter(partido=partido, quiniela=quiniela)
-            .select_related("tipo_evento")
+    # Query 1: partidos de la fecha
+    partidos = list(
+        fecha.partidos
+        .select_related("home_team", "away_team")
+        .order_by("match_date")
+    )
+    partido_ids = [p.id for p in partidos]
+
+    # Query 2: todos los eventos del bloque de partidos × quiniela
+    eventos_by_partido: dict[int, list] = {}
+    for evento in (
+        EventoPartido.objects
+        .filter(partido_id__in=partido_ids, quiniela=quiniela)
+        .select_related("tipo_evento")
+        .order_by("tipo_evento__codigo")
+    ):
+        eventos_by_partido.setdefault(evento.partido_id, []).append(evento)
+
+    # Query 3: pronósticos del usuario para esos eventos
+    evento_ids = [e.id for evs in eventos_by_partido.values() for e in evs]
+    pronos_map = {
+        p.evento_partido_id: p.valor
+        for p in PronosticoEvento.objects.filter(
+            evento_partido_id__in=evento_ids, usuario=request.user
         )
-        ids_eventos = [e.id for e in eventos]
-        pronos_map = {
-            p.evento_partido_id: p.valor
-            for p in PronosticoEvento.objects.filter(
-                evento_partido_id__in=ids_eventos, usuario=request.user
-            )
+    }
+
+    partidos_con_eventos = [
+        {
+            "partido": partido,
+            "eventos": [
+                {"evento": e, "mi_pronostico": pronos_map.get(e.id)}
+                for e in eventos_by_partido.get(partido.id, [])
+            ],
         }
-        eventos_con_prono = [
-            {"evento": e, "mi_pronostico": pronos_map.get(e.id)}
-            for e in eventos
-        ]
-        partidos_con_eventos.append({"partido": partido, "eventos": eventos_con_prono})
+        for partido in partidos
+    ]
 
     return render(request, "predictions/fecha_detail.html", {
         "quiniela": quiniela,
@@ -112,7 +136,7 @@ def mis_pronosticos_view(request, slug):
     quiniela = get_object_or_404(Quiniela, slug=slug)
     get_object_or_404(Inscripcion, jugador=request.user, quiniela=quiniela, activa=True)
 
-    pronosticos = (
+    qs = (
         PronosticoEvento.objects
         .filter(usuario=request.user, evento_partido__quiniela=quiniela)
         .select_related(
@@ -124,9 +148,13 @@ def mis_pronosticos_view(request, slug):
         .order_by("evento_partido__partido__match_date")
     )
 
+    paginator = Paginator(qs, 20)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
     return render(request, "predictions/mis_pronosticos.html", {
         "quiniela": quiniela,
-        "pronosticos": pronosticos,
+        "pronosticos": page_obj,
+        "page_obj": page_obj,
     })
 
 

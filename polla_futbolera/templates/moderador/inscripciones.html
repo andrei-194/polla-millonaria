@@ -80,7 +80,7 @@
 {# --- Lista de inscritos --- #}
 <div class="section-title">
   Jugadores inscritos
-  <span class="badge badge--open" style="margin-left: var(--s2);">{{ inscripciones|length }}</span>
+  <span class="badge badge--open" style="margin-left: var(--s2);">{{ total_inscritos }}</span>
 </div>
 
 {% for inscripcion in inscripciones %}
@@ -112,5 +112,7 @@
   <p class="empty-state__subtitle">Aún no hay jugadores inscritos en esta quiniela.</p>
 </div>
 {% endfor %}
+
+{% include "partials/paginacion.html" with page_obj=page_obj %}
 
 {% endblock %}

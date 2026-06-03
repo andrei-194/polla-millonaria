@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
@@ -33,7 +34,8 @@ def quiniela_detail(request, slug):
             jugador=request.user, quiniela=quiniela, activa=True
         ).exists()
 
-    leaderboard = _build_leaderboard_v3(quiniela.id, limit=None if es_inscrito else 10)
+    # Preview del leaderboard: top 10 público, top 25 para inscritos (la página completa tiene paginación)
+    leaderboard = _build_leaderboard_v3(quiniela.id, limit=25 if es_inscrito else 10)
     fechas = Fecha.objects.filter(torneo=quiniela.tournament).order_by("numero")
 
     return render(request, "quinielas/detail.html", {
@@ -79,16 +81,36 @@ def moderador_dashboard(request):
 
 @moderador_required
 def moderador_jugadores(request):
+    q = request.GET.get("q", "").strip()
+
     users_con_rol = User.objects.filter(
         groups__name__in=["Jugador", "Moderador"]
     ).values_list("id", flat=True).distinct()
-    publicos = User.objects.exclude(
-        id__in=users_con_rol
-    ).filter(is_staff=False, is_superuser=False).order_by("username")
-    jugadores = User.objects.filter(groups__name="Jugador").order_by("username")
+
+    publicos_qs = (
+        User.objects
+        .exclude(id__in=users_con_rol)
+        .filter(is_staff=False, is_superuser=False)
+        .order_by("username")
+    )
+    jugadores_qs = User.objects.filter(groups__name="Jugador").order_by("username")
+
+    if q:
+        publicos_qs = publicos_qs.filter(username__icontains=q)
+        jugadores_qs = jugadores_qs.filter(username__icontains=q)
+
+    pag_publicos = Paginator(publicos_qs, 20)
+    pag_jugadores = Paginator(jugadores_qs, 20)
+
+    page_publicos = pag_publicos.get_page(request.GET.get("page_p"))
+    page_jugadores = pag_jugadores.get_page(request.GET.get("page_j"))
+
     return render(request, "moderador/jugadores.html", {
-        "publicos": publicos,
-        "jugadores": jugadores,
+        "publicos": page_publicos,
+        "jugadores": page_jugadores,
+        "page_publicos": page_publicos,
+        "page_jugadores": page_jugadores,
+        "q": q,
     })
 
 
@@ -142,11 +164,18 @@ def moderador_quitar_jugador(request, user_id):
 @moderador_required
 def moderador_inscripciones(request, slug):
     quiniela = get_object_or_404(Quiniela, slug=slug)
-    inscripciones = (
-        Inscripcion.objects.filter(quiniela=quiniela)
+
+    inscripciones_qs = (
+        Inscripcion.objects
+        .filter(quiniela=quiniela)
         .select_related("jugador")
         .order_by("jugador__username")
     )
+    total_inscritos = inscripciones_qs.count()
+
+    paginator = Paginator(inscripciones_qs, 25)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
     form = InscribirJugadorForm(quiniela=quiniela)
 
     users_con_rol = User.objects.filter(
@@ -158,7 +187,9 @@ def moderador_inscripciones(request, slug):
 
     return render(request, "moderador/inscripciones.html", {
         "quiniela": quiniela,
-        "inscripciones": inscripciones,
+        "inscripciones": page_obj,
+        "page_obj": page_obj,
+        "total_inscritos": total_inscritos,
         "form": form,
         "publicos_pendientes": publicos_pendientes,
         "jugadores_disponibles": form.fields["jugador"].queryset.count(),

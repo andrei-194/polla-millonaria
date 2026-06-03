@@ -38,6 +38,9 @@
     </div>
   </div>
   {% endfor %}
+
+  {% include "partials/paginacion.html" with page_obj=page_obj %}
+
 {% else %}
   <div class="empty-state" style="padding: var(--s6) var(--s4);">
     <i class="bi bi-pencil empty-state__icon"></i>

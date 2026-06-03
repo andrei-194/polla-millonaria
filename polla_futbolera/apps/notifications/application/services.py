@@ -20,8 +20,8 @@ class NotificationService:
             metadata=metadata or {},
         )
 
-    def get_for_user(self, user_id: int) -> list[NotificationDTO]:
-        notifications = Notification.objects.filter(user_id=user_id).order_by("-created_at")
+    def get_for_user(self, user_id: int, limit: int = 50) -> list[NotificationDTO]:
+        notifications = Notification.objects.filter(user_id=user_id).order_by("-created_at")[:limit]
         return [
             NotificationDTO(
                 id=n.id,

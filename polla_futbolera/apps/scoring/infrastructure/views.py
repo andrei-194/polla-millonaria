@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 
 from apps.quinielas.infrastructure.models import Quiniela, Inscripcion
@@ -5,6 +6,7 @@ from apps.quinielas.infrastructure.permissions import jugador_required
 from apps.tournaments.infrastructure.models import Fecha
 from ..application.services import RankingService
 from .models import RankingAcumulado, RankingFecha
+
 
 def leaderboard_acumulado_view(request, slug):
     quiniela = get_object_or_404(Quiniela, slug=slug)
@@ -20,12 +22,19 @@ def leaderboard_acumulado_view(request, slug):
         .select_related("usuario")
         .order_by("posicion")
     )
-    if not es_inscrito:
-        qs = qs[:10]
+
+    page_obj = None
+    if es_inscrito:
+        paginator = Paginator(qs, 25)
+        page_obj = paginator.get_page(request.GET.get("page"))
+        ranking = page_obj
+    else:
+        ranking = list(qs[:10])
 
     return render(request, "scoring/leaderboard_acumulado.html", {
         "quiniela": quiniela,
-        "ranking": list(qs),
+        "ranking": ranking,
+        "page_obj": page_obj,
         "es_inscrito": es_inscrito,
     })
 
@@ -46,13 +55,20 @@ def ranking_fecha_view(request, slug, numero):
         .select_related("usuario")
         .order_by("posicion")
     )
-    if not es_inscrito:
-        qs = qs[:10]
+
+    page_obj = None
+    if es_inscrito:
+        paginator = Paginator(qs, 25)
+        page_obj = paginator.get_page(request.GET.get("page"))
+        ranking = page_obj
+    else:
+        ranking = list(qs[:10])
 
     return render(request, "scoring/ranking_fecha.html", {
         "quiniela": quiniela,
         "fecha": fecha,
-        "ranking": list(qs),
+        "ranking": ranking,
+        "page_obj": page_obj,
         "es_inscrito": es_inscrito,
     })
 

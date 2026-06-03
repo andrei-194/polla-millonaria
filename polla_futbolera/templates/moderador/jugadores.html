@@ -13,17 +13,40 @@
 
 {% block content %}
 
+{# --- Buscador --- #}
+<form method="get" action="" style="display:flex;gap:var(--s2);margin-bottom:var(--s5);">
+  <input
+    type="search"
+    name="q"
+    value="{{ q }}"
+    placeholder="Buscar por nombre de usuario…"
+    class="form-control"
+    style="flex:1;"
+    aria-label="Buscar usuario"
+  >
+  <button type="submit" class="btn btn-secondary btn-sm">
+    <i class="bi bi-search"></i>
+  </button>
+  {% if q %}
+  <a href="?" class="btn btn-secondary btn-sm" aria-label="Limpiar búsqueda">
+    <i class="bi bi-x"></i>
+  </a>
+  {% endif %}
+</form>
+
 {# --- Usuarios públicos: sin ningún rol asignado --- #}
 <div class="section-title">
   Usuarios sin rol
-  {% if publicos %}<span class="badge badge--closed" style="margin-left: var(--s2);">{{ publicos|length }}</span>{% endif %}
+  {% if page_publicos.paginator.count %}
+  <span class="badge badge--closed" style="margin-left: var(--s2);">{{ page_publicos.paginator.count }}</span>
+  {% endif %}
 </div>
 <p class="text-xs text-muted" style="margin-bottom: var(--s3);">
   Estos usuarios se registraron pero aún no tienen rol. Asígnales el rol <strong>Jugador</strong>
   para que puedan ser inscritos en quinielas.
 </p>
 
-{% for usuario in publicos %}
+{% for usuario in page_publicos %}
 <div class="list-row">
   <div class="avatar avatar--sm">{{ usuario.username|first|upper }}</div>
   <div class="list-row__content">
@@ -39,21 +62,27 @@
 </div>
 {% empty %}
 <div class="empty-state" style="padding: var(--s4) var(--s4);">
-  <p class="empty-state__subtitle">No hay usuarios sin rol pendientes.</p>
+  <p class="empty-state__subtitle">
+    {% if q %}No se encontraron usuarios sin rol con "{{ q }}".{% else %}No hay usuarios sin rol pendientes.{% endif %}
+  </p>
 </div>
 {% endfor %}
+
+{% include "partials/paginacion.html" with page_obj=page_publicos page_param="page_p" extra_params="q="|add:q %}
 
 {# --- Jugadores: tienen el rol Jugador --- #}
 <div class="section-title" style="margin-top: var(--s6);">
   Jugadores
-  {% if jugadores %}<span class="badge badge--open" style="margin-left: var(--s2);">{{ jugadores|length }}</span>{% endif %}
+  {% if page_jugadores.paginator.count %}
+  <span class="badge badge--open" style="margin-left: var(--s2);">{{ page_jugadores.paginator.count }}</span>
+  {% endif %}
 </div>
 <p class="text-xs text-muted" style="margin-bottom: var(--s3);">
   Usuarios con rol Jugador. Puedes suspender su acceso temporalmente o quitarles el rol
   (lo que también los da de baja en sus quinielas activas).
 </p>
 
-{% for jugador in jugadores %}
+{% for jugador in page_jugadores %}
 <div class="list-row">
   <div class="avatar avatar--sm {% if not jugador.is_active %}avatar--inactive{% endif %}">
     {{ jugador.username|first|upper }}
@@ -97,8 +126,12 @@
 </div>
 {% empty %}
 <div class="empty-state" style="padding: var(--s4) var(--s4);">
-  <p class="empty-state__subtitle">No hay jugadores registrados aún.</p>
+  <p class="empty-state__subtitle">
+    {% if q %}No se encontraron jugadores con "{{ q }}".{% else %}No hay jugadores registrados aún.{% endif %}
+  </p>
 </div>
 {% endfor %}
+
+{% include "partials/paginacion.html" with page_obj=page_jugadores page_param="page_j" extra_params="q="|add:q %}
 
 {% endblock %}
