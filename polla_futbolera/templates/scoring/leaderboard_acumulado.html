@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard — {{ quiniela.name }}{% endblock %}
+{% block page_title %}Ranking{% endblock %}
+{% block nav_quinielas %}active{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'quinielas:detail' slug=quiniela.slug %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="card mb-4" style="margin-bottom:var(--s4);">
+  <div class="card__body">
+    <div style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:var(--fw-bold);letter-spacing:0.04em;text-transform:uppercase;">
+      {{ quiniela.name }}
+    </div>
+    <div class="text-xs text-muted" style="margin-top:4px;">Ranking acumulado</div>
+  </div>
+</div>
+
+{% if ranking %}
+<div class="leaderboard-list">
+  {% for entrada in ranking %}
+  <div class="leaderboard-row {% if entrada.posicion <= 3 %}leaderboard-row--podium{% endif %}">
+    <span class="leaderboard-row__rank">
+      {% if entrada.posicion == 1 %}<i class="bi bi-trophy-fill" style="color:var(--gold);"></i>
+      {% elif entrada.posicion == 2 %}<i class="bi bi-trophy-fill" style="color:#94a3b8;"></i>
+      {% elif entrada.posicion == 3 %}<i class="bi bi-trophy-fill" style="color:#b45309;"></i>
+      {% else %}{{ entrada.posicion }}{% endif %}
+    </span>
+    <div class="leaderboard-row__user">
+      <span class="leaderboard-row__name">{{ entrada.usuario.username }}</span>
+      <span class="leaderboard-row__detail">
+        {{ entrada.exactos_total }} exactos · {{ entrada.aciertos_total }} aciertos · {{ entrada.fechas_jugadas }} fecha{{ entrada.fechas_jugadas|pluralize:"s" }}
+      </span>
+    </div>
+    <span class="leaderboard-row__pts">{{ entrada.puntos_total }} <small>pts</small></span>
+  </div>
+  {% endfor %}
+</div>
+
+{% if not es_inscrito %}
+<div class="text-xs text-muted" style="text-align:center;margin-top:var(--s4);">
+  Mostrando top 10. Regístrate e inscríbete para ver el ranking completo.
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state" style="padding:var(--s6) var(--s4);">
+  <i class="bi bi-bar-chart empty-state__icon"></i>
+  <p class="empty-state__subtitle">Aún no hay puntuaciones registradas.</p>
+</div>
+{% endif %}
+
+{% if es_inscrito %}
+<div style="margin-top:var(--s5);display:flex;flex-direction:column;gap:var(--s3);">
+  <a href="{% url 'quinielas:mi_historial' slug=quiniela.slug %}" class="btn btn-secondary">
+    <i class="bi bi-clock-history"></i> Mi historial por fechas
+  </a>
+  <a href="{% url 'quinielas:fechas_list' slug=quiniela.slug %}" class="btn btn-secondary">
+    <i class="bi bi-calendar3"></i> Ver fechas
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}

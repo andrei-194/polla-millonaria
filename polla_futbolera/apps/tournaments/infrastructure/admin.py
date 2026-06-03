@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Tournament, Team, Match
+from .models import Tournament, Team, Match, Fecha
 
 
 @admin.register(Tournament)
@@ -15,7 +15,15 @@ class TeamAdmin(admin.ModelAdmin):
     search_fields = ("name", "external_code")
 
 
+@admin.register(Fecha)
+class FechaAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "torneo", "numero", "fecha_inicio", "fecha_fin")
+    list_filter = ("torneo",)
+    search_fields = ("nombre",)
+
+
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "tournament", "phase", "status", "match_date")
-    list_filter = ("status", "tournament")
+    list_display = ("__str__", "tournament", "fecha", "phase", "status", "match_date")
+    list_filter = ("status", "tournament", "fecha")
+    search_fields = ("home_team__name", "away_team__name")

@@ -26,6 +26,45 @@
 
 {% if es_inscrito %}
 
+<!-- Acciones principales -->
+<div style="display: flex; flex-direction: column; gap: var(--s3); margin-bottom: var(--s5);">
+  <a href="{% url 'quinielas:fechas_list' slug=quiniela.slug %}" class="btn btn-primary" style="justify-content: center;">
+    <i class="bi bi-pencil-fill"></i> Pronosticar
+  </a>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3);">
+    <a href="{% url 'quinielas:leaderboard' slug=quiniela.slug %}" class="btn btn-secondary" style="justify-content: center;">
+      <i class="bi bi-bar-chart-fill"></i> Ranking
+    </a>
+    <a href="{% url 'quinielas:mis_pronosticos' slug=quiniela.slug %}" class="btn btn-secondary" style="justify-content: center;">
+      <i class="bi bi-clock-history"></i> Mis pred.
+    </a>
+  </div>
+</div>
+
+<!-- Fechas / Jornadas -->
+{% if fechas %}
+<div class="section-title">Jornadas</div>
+{% for fecha in fechas %}
+<a href="{% url 'quinielas:fecha_detail' slug=quiniela.slug numero=fecha.numero %}" style="text-decoration: none;">
+  <div class="card mb-3" style="margin-bottom: var(--s3);">
+    <div class="card__body">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-weight: var(--fw-semibold);">{{ fecha.nombre }}</div>
+          <div class="text-xs text-muted" style="margin-top: 2px;">
+            {{ fecha.fecha_inicio|date:"d M" }} — {{ fecha.fecha_fin|date:"d M Y" }}
+            · {{ fecha.partidos.count }} partido{{ fecha.partidos.count|pluralize:"s" }}
+          </div>
+        </div>
+        <i class="bi bi-chevron-right" style="color: var(--text-muted);"></i>
+      </div>
+    </div>
+  </div>
+</a>
+{% endfor %}
+
+{% else %}
+<!-- Sin fechas: mostrar partidos del torneo (sistema legacy) -->
 <div class="section-title">Partidos</div>
 
 {% if matches %}
@@ -47,7 +86,7 @@
       <div style="margin-top:var(--s3);text-align:center;">
         <a href="{% url 'predictions:predict' slug=quiniela.slug match_id=match.id %}"
            class="btn btn-primary btn-sm">
-          <i class="bi bi-pencil-fill"></i> Pronosticar
+          <i class="bi bi-pencil-fill"></i> Pronosticar (legacy)
         </a>
       </div>
       {% endif %}
@@ -61,29 +100,43 @@
   </div>
 {% endif %}
 
-<div class="mt-4">
-  <a href="{% url 'quinielas:leaderboard' slug=quiniela.slug %}" class="btn btn-secondary">
-    <i class="bi bi-bar-chart"></i> Ver ranking completo
-  </a>
+{% if user.is_superuser %}
+<div class="card" style="border: 1px solid var(--warning, #f59e0b); margin-top: var(--s4);">
+  <div class="card__body">
+    <div class="text-sm" style="font-weight: var(--fw-semibold); margin-bottom: var(--s2);">
+      <i class="bi bi-info-circle"></i> Configurar jornadas
+    </div>
+    <div class="text-xs text-muted">
+      Para activar el sistema de pronósticos v3, crea <strong>Fechas</strong> en el admin,
+      asigna partidos a cada fecha y crea <strong>Eventos de Partido</strong> (SCORE, WINNER, BTTS, OU25).
+    </div>
+    <a href="{% url 'admin:tournaments_fecha_add' %}" class="btn btn-secondary btn-sm" style="margin-top: var(--s3);">
+      <i class="bi bi-plus-circle"></i> Crear primera jornada
+    </a>
+  </div>
 </div>
+{% endif %}
+
+{% endif %}
 
 {% else %}
 
+<!-- Vista pública: top 10 del ranking acumulado -->
 <div class="section-title">Top 10</div>
 
 {% if leaderboard %}
 <div class="leaderboard-list">
   {% for entry in leaderboard %}
-  <div class="leaderboard-row {% if forloop.counter <= 3 %}leaderboard-row--podium{% endif %}">
+  <div class="leaderboard-row {% if entry.posicion <= 3 %}leaderboard-row--podium{% endif %}">
     <span class="leaderboard-row__rank">
-      {% if forloop.counter == 1 %}<i class="bi bi-trophy-fill" style="color: var(--gold);"></i>
-      {% elif forloop.counter == 2 %}<i class="bi bi-trophy-fill" style="color: #94a3b8;"></i>
-      {% elif forloop.counter == 3 %}<i class="bi bi-trophy-fill" style="color: #b45309;"></i>
-      {% else %}{{ forloop.counter }}{% endif %}
+      {% if entry.posicion == 1 %}<i class="bi bi-trophy-fill" style="color: var(--gold);"></i>
+      {% elif entry.posicion == 2 %}<i class="bi bi-trophy-fill" style="color: #94a3b8;"></i>
+      {% elif entry.posicion == 3 %}<i class="bi bi-trophy-fill" style="color: #b45309;"></i>
+      {% else %}{{ entry.posicion }}{% endif %}
     </span>
     <div class="leaderboard-row__user">
       <span class="leaderboard-row__name">{{ entry.user__username }}</span>
-      <span class="leaderboard-row__detail">{{ entry.exactos }} exactos · {{ entry.ganadores }} ganador</span>
+      <span class="leaderboard-row__detail">{{ entry.exactos }} exactos · {{ entry.ganadores }} aciertos</span>
     </div>
     <span class="leaderboard-row__pts">{{ entry.total_points }} <small>pts</small></span>
   </div>

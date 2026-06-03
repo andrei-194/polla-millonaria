@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Ranking {{ fecha.nombre }} — {{ quiniela.name }}{% endblock %}
+{% block page_title %}{{ fecha.nombre }}{% endblock %}
+{% block nav_quinielas %}active{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'quinielas:fecha_detail' slug=quiniela.slug numero=fecha.numero %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="card mb-4" style="margin-bottom:var(--s4);">
+  <div class="card__body">
+    <div style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:var(--fw-bold);">
+      {{ quiniela.name }}
+    </div>
+    <div class="text-xs text-muted" style="margin-top:4px;">
+      {{ fecha.fecha_inicio|date:"d M" }} — {{ fecha.fecha_fin|date:"d M Y" }}
+    </div>
+  </div>
+</div>
+
+{% if ranking %}
+<div class="leaderboard-list">
+  {% for entrada in ranking %}
+  <div class="leaderboard-row {% if entrada.posicion <= 3 %}leaderboard-row--podium{% endif %}">
+    <span class="leaderboard-row__rank">
+      {% if entrada.posicion == 1 %}<i class="bi bi-trophy-fill" style="color:var(--gold);"></i>
+      {% elif entrada.posicion == 2 %}<i class="bi bi-trophy-fill" style="color:#94a3b8;"></i>
+      {% elif entrada.posicion == 3 %}<i class="bi bi-trophy-fill" style="color:#b45309;"></i>
+      {% else %}{{ entrada.posicion }}{% endif %}
+    </span>
+    <div class="leaderboard-row__user">
+      <span class="leaderboard-row__name">{{ entrada.usuario.username }}</span>
+    </div>
+    <span class="leaderboard-row__pts">{{ entrada.puntos }} <small>pts</small></span>
+  </div>
+  {% endfor %}
+</div>
+
+{% if not es_inscrito %}
+<div class="text-xs text-muted" style="text-align:center;margin-top:var(--s4);">
+  Mostrando top 10.
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state" style="padding:var(--s6) var(--s4);">
+  <i class="bi bi-bar-chart empty-state__icon"></i>
+  <p class="empty-state__subtitle">Aún no hay puntuaciones para esta fecha.</p>
+</div>
+{% endif %}
+
+{% endblock %}

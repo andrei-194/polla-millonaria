@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Mi historial — {{ quiniela.name }}{% endblock %}
+{% block page_title %}Mi historial{% endblock %}
+{% block nav_quinielas %}active{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'quinielas:leaderboard' slug=quiniela.slug %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+
+{% if ranking_acumulado %}
+<div class="card mb-4" style="margin-bottom:var(--s4);">
+  <div class="card__body">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3);text-align:center;">
+      <div>
+        <div style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:var(--fw-black);">
+          #{{ ranking_acumulado.posicion }}
+        </div>
+        <div class="text-xs text-muted">Posición</div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:var(--fw-black);">
+          {{ ranking_acumulado.puntos_total }}
+        </div>
+        <div class="text-xs text-muted">Puntos</div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:var(--fw-black);">
+          {{ ranking_acumulado.exactos_total }}
+        </div>
+        <div class="text-xs text-muted">Exactos</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="section-title">Puntos por fecha</div>
+
+{% if rankings_fecha %}
+{% for rf in rankings_fecha %}
+<div class="card mb-3" style="margin-bottom:var(--s3);">
+  <div class="card__body">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-weight:var(--fw-semibold);">{{ rf.fecha.nombre }}</div>
+        <div class="text-xs text-muted">{{ rf.fecha.fecha_inicio|date:"d M" }} — {{ rf.fecha.fecha_fin|date:"d M Y" }}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:var(--fw-black);">
+          {{ rf.puntos }} <small style="font-size:var(--text-sm);font-family:inherit;">pts</small>
+        </div>
+        <div class="text-xs text-muted">#{{ rf.posicion }}</div>
+      </div>
+    </div>
+    <div style="margin-top:var(--s3);">
+      <a href="{% url 'quinielas:ranking_fecha' slug=quiniela.slug numero=rf.fecha.numero %}"
+         class="btn btn-secondary btn-sm">
+        <i class="bi bi-bar-chart"></i> Ver ranking de la fecha
+      </a>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state" style="padding:var(--s6) var(--s4);">
+  <i class="bi bi-clock-history empty-state__icon"></i>
+  <p class="empty-state__subtitle">Aún no hay puntuaciones registradas para ti.</p>
+</div>
+{% endif %}
+
+{% endblock %}

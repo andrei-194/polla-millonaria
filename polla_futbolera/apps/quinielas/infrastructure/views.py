@@ -10,7 +10,8 @@ from ..domain.exceptions import JugadorYaInscritoError, JugadorNoInscritoError
 from .models import Quiniela, Inscripcion
 from .forms import InscribirJugadorForm
 from .permissions import jugador_required, moderador_required
-from apps.scoring.infrastructure.models import Score
+from apps.scoring.infrastructure.models import Score, RankingAcumulado
+from apps.tournaments.infrastructure.models import Fecha
 
 User = get_user_model()
 
@@ -32,14 +33,16 @@ def quiniela_detail(request, slug):
             jugador=request.user, quiniela=quiniela, activa=True
         ).exists()
 
-    leaderboard = _build_leaderboard(quiniela.id, limit=None if es_inscrito else 10)
+    leaderboard = _build_leaderboard_v3(quiniela.id, limit=None if es_inscrito else 10)
     matches = quiniela.tournament.matches.order_by("match_date")
+    fechas = Fecha.objects.filter(torneo=quiniela.tournament).order_by("numero")
 
     return render(request, "quinielas/detail.html", {
         "quiniela": quiniela,
         "es_inscrito": es_inscrito,
         "leaderboard": leaderboard,
         "matches": matches,
+        "fechas": fechas,
     })
 
 
@@ -53,28 +56,32 @@ def quiniela_leaderboard(request, slug):
         messages.error(request, "No estás inscrito en esta quiniela")
         return redirect("quinielas:detail", slug=slug)
 
-    leaderboard = _build_leaderboard(quiniela.id)
+    leaderboard = _build_leaderboard_v3(quiniela.id)
     return render(request, "quinielas/leaderboard.html", {
         "quiniela": quiniela,
         "leaderboard": leaderboard,
     })
 
 
-def _build_leaderboard(quiniela_id: int, limit: int | None = None):
+def _build_leaderboard_v3(quiniela_id: int, limit: int | None = None):
     qs = (
-        Score.objects.filter(quiniela_id=quiniela_id)
-        .values("user_id", "user__username")
-        .annotate(
-            total_points=Sum("points"),
-            exactos=Count("id", filter=Q(hit_type="exact")),
-            ganadores=Count("id", filter=Q(hit_type="winner")),
-            fallos=Count("id", filter=Q(hit_type="miss")),
-        )
-        .order_by("-total_points")
+        RankingAcumulado.objects
+        .filter(quiniela_id=quiniela_id)
+        .select_related("usuario")
+        .order_by("posicion")
     )
     if limit:
         qs = qs[:limit]
-    return list(qs)
+    return [
+        {
+            "user__username": r.usuario.username,
+            "total_points": r.puntos_total,
+            "exactos": r.exactos_total,
+            "ganadores": r.aciertos_total,
+            "posicion": r.posicion,
+        }
+        for r in qs
+    ]
 
 
 # --- Vistas del Moderador ---

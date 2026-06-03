@@ -1,5 +1,8 @@
 from django.urls import path
+
 from . import views
+from apps.predictions.infrastructure import views as pred_views
+from apps.scoring.infrastructure import views as scoring_views
 
 app_name = "quinielas"
 
@@ -20,5 +23,16 @@ urlpatterns = [
 
     # Vistas por quiniela — DESPUÉS de las rutas fijas
     path("<slug:slug>/", views.quiniela_detail, name="detail"),
-    path("<slug:slug>/leaderboard/", views.quiniela_leaderboard, name="leaderboard"),
+
+    # Rankings
+    path("<slug:slug>/leaderboard/", scoring_views.leaderboard_acumulado_view, name="leaderboard"),
+    path("<slug:slug>/fechas/<int:numero>/ranking/", scoring_views.ranking_fecha_view, name="ranking_fecha"),
+    path("<slug:slug>/mi-historial/", scoring_views.mi_historial_view, name="mi_historial"),
+
+    # Fechas y eventos (predicciones v3)
+    path("<slug:slug>/fechas/", pred_views.fechas_list_view, name="fechas_list"),
+    path("<slug:slug>/fechas/<int:numero>/", pred_views.fecha_detail_view, name="fecha_detail"),
+    path("<slug:slug>/eventos/<int:evento_id>/pronosticar/", pred_views.pronosticar_evento_view, name="pronosticar_evento"),
+    path("<slug:slug>/mis-pronosticos/", pred_views.mis_pronosticos_view, name="mis_pronosticos"),
+    path("<slug:slug>/partidos/<int:match_id>/resultados/", pred_views.resultados_partido_view, name="resultados_partido"),
 ]

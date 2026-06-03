@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 from typing import Optional
 import uuid
@@ -35,6 +35,16 @@ class Team:
 
 
 @dataclass
+class Fecha:
+    torneo_id: uuid.UUID
+    numero: int
+    nombre: str
+    fecha_inicio: date
+    fecha_fin: date
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+
+@dataclass
 class Match:
     tournament_id: uuid.UUID
     home_team_id: uuid.UUID
@@ -46,6 +56,7 @@ class Match:
     home_score: Optional[int] = None
     away_score: Optional[int] = None
     status: MatchStatus = MatchStatus.SCHEDULED
+    fecha_id: Optional[uuid.UUID] = None
 
     def has_result(self) -> bool:
         return self.home_score is not None and self.away_score is not None

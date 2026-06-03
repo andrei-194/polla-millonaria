@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}{{ evento.tipo_evento.nombre }} — Polla Futbolera{% endblock %}
+{% block page_title %}{{ evento.tipo_evento.nombre }}{% endblock %}
+{% block nav_predict %}active{% endblock %}
+
+{% block header_back %}
+<a href="javascript:history.back()" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Partido -->
+<div class="match-scorer" style="margin-bottom: var(--s4);">
+  <div class="match-scorer__team">
+    <div class="match-scorer__badge">{{ evento.partido.home_team|slice:":3"|upper }}</div>
+    <span class="match-scorer__name">{{ evento.partido.home_team }}</span>
+  </div>
+  <div class="match-scorer__inputs">
+    <span style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:var(--fw-black);padding:0 var(--s3);">VS</span>
+  </div>
+  <div class="match-scorer__team">
+    <div class="match-scorer__badge">{{ evento.partido.away_team|slice:":3"|upper }}</div>
+    <span class="match-scorer__name">{{ evento.partido.away_team }}</span>
+  </div>
+</div>
+
+<!-- Pregunta -->
+<div class="card mb-4" style="margin-bottom: var(--s4);">
+  <div class="card__body">
+    <div style="font-weight: var(--fw-semibold); margin-bottom: var(--s2);">{{ evento.tipo_evento.descripcion }}</div>
+    <div class="text-xs text-muted">
+      <i class="bi bi-clock"></i> Cierra {{ evento.plazo_cierre|date:"d M H:i" }}
+    </div>
+  </div>
+</div>
+
+<!-- Formulario -->
+<form method="post">
+  {% csrf_token %}
+
+  {% if evento.tipo_evento.codigo == 'SCORE' %}
+  <div class="card mb-4" style="margin-bottom: var(--s4);">
+    <div class="card__body">
+      <label style="display:block;margin-bottom:var(--s2);font-weight:var(--fw-medium);">Marcador (local - visitante)</label>
+      <div style="display:flex;align-items:center;gap:var(--s3);">
+        <input type="number" name="home" id="home" min="0" max="20" inputmode="numeric"
+               class="match-scorer__input"
+               value="{{ score_home|default:'' }}"
+               required>
+        <span style="font-size:var(--text-xl);font-weight:var(--fw-black);">-</span>
+        <input type="number" name="away" id="away" min="0" max="20" inputmode="numeric"
+               class="match-scorer__input"
+               value="{{ score_away|default:'' }}"
+               required>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="card mb-4" style="margin-bottom: var(--s4);">
+    <div class="card__body" style="display:flex;flex-direction:column;gap:var(--s3);">
+      {% for choice in evento.tipo_evento.config.choices %}
+      <label style="display:flex;align-items:center;gap:var(--s3);cursor:pointer;padding:var(--s3);border-radius:var(--radius-md);border:1px solid var(--border-subtle);">
+        <input type="radio" name="valor" value="{{ choice }}"
+               {% if pronostico_existente.valor == choice %}checked{% endif %}
+               required style="accent-color:var(--accent);">
+        <span style="font-weight:var(--fw-medium);">
+          {% if evento.tipo_evento.codigo == 'WINNER' %}
+            {% if choice == 'H' %}Local{% elif choice == 'D' %}Empate{% elif choice == 'A' %}Visitante{% else %}{{ choice }}{% endif %}
+          {% elif evento.tipo_evento.codigo == 'BTTS' %}
+            {% if choice == 'yes' %}Sí, anotan ambos{% else %}No anotan ambos{% endif %}
+          {% elif evento.tipo_evento.codigo == 'OU25' %}
+            {% if choice == 'over' %}Más de 2.5 goles{% else %}Menos de 2.5 goles{% endif %}
+          {% else %}
+            {{ choice }}
+          {% endif %}
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <button type="submit" class="btn btn-primary" style="width:100%;">
+    <i class="bi bi-check-circle-fill"></i>
+    {% if pronostico_existente %}Actualizar pronóstico{% else %}Guardar pronóstico{% endif %}
+  </button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados — {{ match }}{% endblock %}
+{% block page_title %}Resultados{% endblock %}
+{% block nav_quinielas %}active{% endblock %}
+
+{% block header_back %}
+<a href="javascript:history.back()" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="card mb-4" style="margin-bottom:var(--s4);">
+  <div class="card__body">
+    <div style="display:flex;align-items:center;justify-content:center;gap:var(--s4);">
+      <span style="font-weight:var(--fw-semibold);">{{ match.home_team }}</span>
+      {% if match.home_score is not None %}
+      <span style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:var(--fw-black);">
+        {{ match.home_score }} - {{ match.away_score }}
+      </span>
+      {% else %}
+      <span class="text-muted">vs</span>
+      {% endif %}
+      <span style="font-weight:var(--fw-semibold);">{{ match.away_team }}</span>
+    </div>
+  </div>
+</div>
+
+{% for evento in eventos %}
+<div class="section-title">{{ evento.tipo_evento.nombre }}</div>
+
+{% if evento.estado == 'puntuado' %}
+<div class="leaderboard-list">
+  {% for puntuacion in evento.puntuaciones.all %}
+  <div class="leaderboard-row {% if puntuacion.codigo_acierto == 'EXACT' or puntuacion.codigo_acierto == 'HIT' %}leaderboard-row--podium{% endif %}">
+    <span class="leaderboard-row__rank" style="width:24px;">
+      {% if puntuacion.codigo_acierto == 'EXACT' %}<i class="bi bi-star-fill" style="color:var(--gold);"></i>
+      {% elif puntuacion.codigo_acierto == 'HIT' %}<i class="bi bi-check-circle-fill" style="color:var(--success,#22c55e);"></i>
+      {% elif puntuacion.codigo_acierto == 'MISS' %}<i class="bi bi-x-circle" style="color:var(--error,#ef4444);"></i>
+      {% else %}<i class="bi bi-circle-half" style="color:var(--warning,#f59e0b);"></i>
+      {% endif %}
+    </span>
+    <div class="leaderboard-row__user">
+      <span class="leaderboard-row__name">{{ puntuacion.usuario.username }}</span>
+      <span class="leaderboard-row__detail">{{ puntuacion.valor_pronosticado }} · {{ puntuacion.codigo_acierto }}</span>
+    </div>
+    <span class="leaderboard-row__pts">{{ puntuacion.puntos }} <small>pts</small></span>
+  </div>
+  {% empty %}
+  <div class="text-sm text-muted" style="padding: var(--s3);">Sin pronósticos registrados.</div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card mb-3" style="margin-bottom:var(--s3);">
+  <div class="card__body text-sm text-muted">
+    <i class="bi bi-clock"></i> Resultados disponibles cuando el evento sea puntuado.
+  </div>
+</div>
+{% endif %}
+{% empty %}
+<div class="empty-state" style="padding:var(--s6) var(--s4);">
+  <i class="bi bi-calendar3 empty-state__icon"></i>
+  <p class="empty-state__subtitle">No hay eventos activados para este partido.</p>
+</div>
+{% endfor %}
+
+{% endblock %}

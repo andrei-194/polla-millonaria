@@ -11,3 +11,11 @@ class PredictionAlreadyExistsError(DomainException):
 
 class PredictionNotFoundError(DomainException):
     pass
+
+
+class ValorInvalidoError(DomainException):
+    pass
+
+
+class EventoCerradoError(DomainException):
+    pass

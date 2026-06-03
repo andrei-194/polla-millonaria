@@ -29,6 +29,25 @@ class Team(models.Model):
         return self.name
 
 
+class Fecha(models.Model):
+    torneo = models.ForeignKey(
+        "tournaments.Tournament", on_delete=models.CASCADE, related_name="fechas"
+    )
+    numero = models.PositiveSmallIntegerField()
+    nombre = models.CharField(max_length=100)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+
+    class Meta:
+        db_table = "tournaments_fecha"
+        unique_together = ("torneo", "numero")
+        ordering = ["numero"]
+        verbose_name = "Fecha / Jornada"
+
+    def __str__(self):
+        return f"{self.torneo} — {self.nombre}"
+
+
 class Match(models.Model):
     STATUS_CHOICES = [
         ("scheduled", "Programado"),
@@ -46,6 +65,9 @@ class Match(models.Model):
     home_score = models.IntegerField(null=True, blank=True)
     away_score = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="scheduled")
+    fecha = models.ForeignKey(
+        Fecha, on_delete=models.SET_NULL, null=True, blank=True, related_name="partidos"
+    )
     synced_at = models.DateTimeField(auto_now=True)
 
     class Meta:
