@@ -21,6 +21,7 @@ class EventoPartidoAdmin(admin.ModelAdmin):
     search_fields = ("partido__home_team__name", "partido__away_team__name")
     actions = ["calcular_puntos"]
 
+
     def calcular_puntos(self, request, queryset):
         """
         Calcula puntos solo para los EventoPartido seleccionados.

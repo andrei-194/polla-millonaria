@@ -4,6 +4,7 @@ Capa 1 — Inscripción de jugadores
 TestInscripcionService   : capa de aplicación (QuinielaService)
 TestInscripcionHTTP      : flujo HTTP moderador → inscribir / dar de baja
 TestAccesoFechas         : control de acceso jugador inscrito vs no inscrito
+TestSeguridadEventos     : gates de seguridad de esta_abierto() y validación plazo_cierre
 
 Ejecutar:
     docker-compose exec web python manage.py test tests.test_inscripcion
@@ -247,7 +248,7 @@ class TestAccesoFechas(TournamentScenario):
 
     def test_jugador_inscrito_puede_pronosticar_score_abierto(self):
         self._inscribir(self.jugadores[0])
-        partido = self._crear_partido(self.fecha)
+        partido = self._crear_partido(self.fecha, status="scheduled")
         evento = self._crear_evento(partido, self.tipo_score, abierto=True)
         self.client.login(username="jugador1", password="test1234")
         url = reverse(
@@ -265,7 +266,7 @@ class TestAccesoFechas(TournamentScenario):
 
     def test_jugador_puede_actualizar_pronostico_abierto(self):
         self._inscribir(self.jugadores[0])
-        partido = self._crear_partido(self.fecha)
+        partido = self._crear_partido(self.fecha, status="scheduled")
         evento = self._crear_evento(partido, self.tipo_score, abierto=True)
         self.client.login(username="jugador1", password="test1234")
         url = reverse(
@@ -302,7 +303,7 @@ class TestAccesoFechas(TournamentScenario):
         )
 
     def test_jugador_no_inscrito_no_puede_pronosticar(self):
-        partido = self._crear_partido(self.fecha)
+        partido = self._crear_partido(self.fecha, status="scheduled")
         evento = self._crear_evento(partido, self.tipo_score, abierto=True)
         self.client.login(username="jugador1", password="test1234")
         url = reverse(
@@ -311,3 +312,106 @@ class TestAccesoFechas(TournamentScenario):
         )
         response = self.client.post(url, data={"home": "2", "away": "1"})
         self.assertEqual(response.status_code, 404)
+
+
+class TestSeguridadEventos(TournamentScenario):
+    """
+    Tests de los dos gates de seguridad implementados para MVP:
+
+    1. esta_abierto() bloquea cuando Match.status es in_progress o finished,
+       aunque plazo_cierre sea futuro (previene admin descuidado).
+
+    2. EventoPartido.clean() rechaza plazo_cierre >= match_date
+       (previene crear eventos con deadline inválido).
+    """
+
+    def setUp(self):
+        self.fecha = self._crear_fecha(numero=1)
+        self._inscribir(self.jugadores[0])
+
+    # ── Gate 1: Match.status como segunda condición ───────────────────────────
+
+    def test_evento_abierto_con_partido_scheduled(self):
+        """Partido futuro + plazo futuro → puede pronosticar."""
+        partido = self._crear_partido(self.fecha, status="scheduled")
+        evento = self._crear_evento(partido, self.tipo_score, abierto=True)
+        self.assertTrue(evento.esta_abierto())
+
+    def test_evento_bloqueado_cuando_partido_in_progress(self):
+        """Partido en curso bloquea pronósticos aunque plazo_cierre sea futuro."""
+        partido = self._crear_partido(self.fecha, status="in_progress")
+        evento = self._crear_evento(partido, self.tipo_score, abierto=True)
+        self.assertFalse(evento.esta_abierto())
+
+    def test_evento_bloqueado_cuando_partido_finished(self):
+        """Partido terminado bloquea pronósticos aunque plazo_cierre sea futuro."""
+        partido = self._crear_partido(self.fecha, status="finished")
+        evento = self._crear_evento(partido, self.tipo_score, abierto=True)
+        self.assertFalse(evento.esta_abierto())
+
+    def test_evento_bloqueado_cuando_plazo_vencido_y_partido_scheduled(self):
+        """Plazo vencido bloquea incluso si el partido no empezó."""
+        partido = self._crear_partido(self.fecha, status="scheduled")
+        evento = self._crear_evento(partido, self.tipo_score, abierto=False)
+        self.assertFalse(evento.esta_abierto())
+
+    def test_partido_in_progress_impide_pronosticar_via_http(self):
+        """
+        Escenario de trampa: admin extiende plazo_cierre después de iniciado el partido.
+        El jugador intenta pronosticar → debe recibir error 200 (evento cerrado).
+        """
+        partido = self._crear_partido(self.fecha, status="in_progress")
+        evento = self._crear_evento(partido, self.tipo_score, abierto=True)
+        self.client.login(username="jugador1", password="test1234")
+        url = reverse(
+            "quinielas:pronosticar_evento",
+            kwargs={"slug": self.quiniela.slug, "evento_id": evento.id},
+        )
+        response = self.client.post(url, data={"home": "2", "away": "1"})
+        self.assertEqual(response.status_code, 200)  # re-renderiza con error
+        from apps.predictions.infrastructure.models import PronosticoEvento
+        self.assertFalse(
+            PronosticoEvento.objects.filter(
+                usuario=self.jugadores[0], evento_partido=evento
+            ).exists()
+        )
+
+    # ── Gate 2: plazo_cierre < match_date obligatorio ────────────────────────
+
+    def test_clean_acepta_plazo_anterior_al_partido(self):
+        """plazo_cierre < match_date → sin error de validación."""
+        import datetime
+        from django.utils import timezone
+        from django.core.exceptions import ValidationError
+        partido = self._crear_partido(self.fecha, status="scheduled")
+        evento = self._crear_evento(partido, self.tipo_score, abierto=True)
+        # plazo_cierre ya está en el futuro pero antes de match_date → válido
+        try:
+            evento.full_clean()
+        except ValidationError as e:
+            if "plazo_cierre" in str(e):
+                self.fail(f"full_clean() lanzó ValidationError inesperado: {e}")
+
+    def test_clean_rechaza_plazo_igual_a_inicio_partido(self):
+        """plazo_cierre == match_date → ValidationError."""
+        import datetime
+        from django.utils import timezone
+        from django.core.exceptions import ValidationError
+        partido = self._crear_partido(self.fecha, status="scheduled")
+        evento = self._crear_evento(partido, self.tipo_score, abierto=True)
+        evento.plazo_cierre = partido.match_date  # igual → inválido
+        with self.assertRaises(ValidationError) as ctx:
+            evento.full_clean()
+        self.assertIn("plazo_cierre", str(ctx.exception))
+
+    def test_clean_rechaza_plazo_posterior_al_partido(self):
+        """plazo_cierre > match_date → ValidationError."""
+        import datetime
+        from django.utils import timezone
+        from django.core.exceptions import ValidationError
+        partido = self._crear_partido(self.fecha, status="scheduled")
+        evento = self._crear_evento(partido, self.tipo_score, abierto=True)
+        evento.plazo_cierre = partido.match_date + datetime.timedelta(hours=1)
+        with self.assertRaises(ValidationError) as ctx:
+            evento.full_clean()
+        self.assertIn("plazo_cierre", str(ctx.exception))

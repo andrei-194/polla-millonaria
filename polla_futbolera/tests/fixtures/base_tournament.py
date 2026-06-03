@@ -113,14 +113,24 @@ class TournamentScenario(TestCase):
             fecha_fin=hoy + datetime.timedelta(days=6),
         )
 
-    def _crear_partido(self, fecha: Fecha, suffix: str = "a") -> Match:
+    def _crear_partido(
+        self,
+        fecha: Fecha,
+        suffix: str = "a",
+        *,
+        status: str = "finished",
+    ) -> Match:
+        # status="finished"  → partido terminado (default para tests de scoring/ranking)
+        # status="scheduled" → partido por jugarse, 4h adelante para que plazo_cierre
+        #                       (+2h vía _crear_evento abierto=True) quede ANTES del partido
+        offset_horas = 4 if status == "scheduled" else -2
         return Match.objects.create(
             tournament=self.torneo,
             home_team=self.equipo_a,
             away_team=self.equipo_b,
             external_id=f"match-f{fecha.numero}-{suffix}",
-            match_date=timezone.now() - datetime.timedelta(hours=2),
-            status="finished",
+            match_date=timezone.now() + datetime.timedelta(hours=offset_horas),
+            status=status,
             fecha=fecha,
         )
 

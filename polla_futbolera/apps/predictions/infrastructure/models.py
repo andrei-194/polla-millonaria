@@ -48,9 +48,33 @@ class EventoPartido(models.Model):
     def __str__(self):
         return f"{self.partido} — {self.tipo_evento.codigo} [{self.estado}]"
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.plazo_cierre and self.partido_id:
+            from apps.tournaments.infrastructure.models import Match
+            try:
+                match_date = Match.objects.values_list("match_date", flat=True).get(pk=self.partido_id)
+                if self.plazo_cierre >= match_date:
+                    raise ValidationError({
+                        "plazo_cierre": (
+                            f"El plazo de cierre ({self.plazo_cierre:%d/%m/%Y %H:%M}) "
+                            f"debe ser anterior al inicio del partido "
+                            f"({match_date:%d/%m/%Y %H:%M})."
+                        )
+                    })
+            except Match.DoesNotExist:
+                pass
+
     def esta_abierto(self) -> bool:
         from django.utils import timezone
-        return self.estado == self.Estado.ABIERTO and timezone.now() < self.plazo_cierre
+        # El partido en curso o finalizado cierra el evento aunque plazo_cierre sea futuro.
+        # Esto previene que un admin descuidado extienda el plazo después de iniciado el partido.
+        partido_activo = self.partido.status in ("in_progress", "finished")
+        return (
+            self.estado == self.Estado.ABIERTO
+            and timezone.now() < self.plazo_cierre
+            and not partido_activo
+        )
 
 
 class PronosticoEvento(models.Model):
