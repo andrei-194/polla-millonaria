@@ -1,67 +1,13 @@
 from django.db import transaction
 from django.db.models import Sum, Count, Q
 
-from .dtos import LeaderboardEntryDTO
-from ..domain.entities import calculate_hit_type, POINTS_MAP, RankingEntrada
+from ..domain.entities import RankingEntrada
 from ..domain.exceptions import EventoSinResultadoError
-from ..infrastructure.models import Score, PuntuacionEvento, ReglaPuntuacion, RankingFecha, RankingAcumulado
-from apps.predictions.infrastructure.models import Prediction, EventoPartido, PronosticoEvento
-from apps.tournaments.infrastructure.models import Match
+from ..infrastructure.models import PuntuacionEvento, ReglaPuntuacion, RankingFecha, RankingAcumulado
+from apps.predictions.infrastructure.models import EventoPartido, PronosticoEvento
 
 
 class ScoringService:
-
-    def calculate_scores_for_match(self, match_id: int) -> int:
-        match = Match.objects.get(id=match_id)
-        if not match.has_result():
-            return 0
-
-        predictions = Prediction.objects.filter(match=match).select_related("quiniela")
-        count = 0
-        for prediction in predictions:
-            hit_type = calculate_hit_type(
-                prediction.home_goals,
-                prediction.away_goals,
-                match.home_score,
-                match.away_score,
-            )
-            points = POINTS_MAP[hit_type]
-            Score.objects.update_or_create(
-                user_id=prediction.user_id,
-                match_id=match_id,
-                quiniela_id=prediction.quiniela_id,
-                defaults={"points": points, "hit_type": hit_type.value},
-            )
-            count += 1
-        return count
-
-    def get_leaderboard(self, quiniela_id: int, limit: int | None = None) -> list[LeaderboardEntryDTO]:
-        qs = (
-            Score.objects.filter(quiniela_id=quiniela_id)
-            .values("user_id", "user__username")
-            .annotate(
-                total_points=Sum("points"),
-                exact_count=Count("id", filter=Q(hit_type="exact")),
-                winner_count=Count("id", filter=Q(hit_type="winner")),
-                miss_count=Count("id", filter=Q(hit_type="miss")),
-            )
-            .order_by("-total_points")
-        )
-        if limit:
-            qs = qs[:limit]
-        return [
-            LeaderboardEntryDTO(
-                username=s["user__username"],
-                user_id=s["user_id"],
-                total_points=s["total_points"] or 0,
-                exact_count=s["exact_count"],
-                winner_count=s["winner_count"],
-                miss_count=s["miss_count"],
-            )
-            for s in qs
-        ]
-
-    # --- V3 methods ---
 
     def calcular_puntos_evento(self, evento_partido_id: int) -> list[PuntuacionEvento]:
         with transaction.atomic():

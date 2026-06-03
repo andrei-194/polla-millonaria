@@ -10,7 +10,7 @@ from ..domain.exceptions import JugadorYaInscritoError, JugadorNoInscritoError
 from .models import Quiniela, Inscripcion
 from .forms import InscribirJugadorForm
 from .permissions import jugador_required, moderador_required
-from apps.scoring.infrastructure.models import Score, RankingAcumulado
+from apps.scoring.infrastructure.models import RankingAcumulado
 from apps.tournaments.infrastructure.models import Fecha
 
 User = get_user_model()
@@ -34,32 +34,13 @@ def quiniela_detail(request, slug):
         ).exists()
 
     leaderboard = _build_leaderboard_v3(quiniela.id, limit=None if es_inscrito else 10)
-    matches = quiniela.tournament.matches.order_by("match_date")
     fechas = Fecha.objects.filter(torneo=quiniela.tournament).order_by("numero")
 
     return render(request, "quinielas/detail.html", {
         "quiniela": quiniela,
         "es_inscrito": es_inscrito,
         "leaderboard": leaderboard,
-        "matches": matches,
         "fechas": fechas,
-    })
-
-
-@jugador_required
-def quiniela_leaderboard(request, slug):
-    quiniela = get_object_or_404(Quiniela, slug=slug)
-    inscripcion = Inscripcion.objects.filter(
-        jugador=request.user, quiniela=quiniela, activa=True
-    ).first()
-    if not inscripcion:
-        messages.error(request, "No estás inscrito en esta quiniela")
-        return redirect("quinielas:detail", slug=slug)
-
-    leaderboard = _build_leaderboard_v3(quiniela.id)
-    return render(request, "quinielas/leaderboard.html", {
-        "quiniela": quiniela,
-        "leaderboard": leaderboard,
     })
 
 

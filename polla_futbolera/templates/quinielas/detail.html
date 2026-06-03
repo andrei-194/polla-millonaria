@@ -64,42 +64,10 @@
 {% endfor %}
 
 {% else %}
-<!-- Sin fechas: mostrar partidos del torneo (sistema legacy) -->
-<div class="section-title">Partidos</div>
-
-{% if matches %}
-  {% for match in matches %}
-  <div class="card mb-3" style="margin-bottom: var(--s3);">
-    <div class="card__body">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--s3);">
-        <span style="flex:1;text-align:right;font-weight:var(--fw-semibold);">{{ match.home_team }}</span>
-        <div style="text-align:center;min-width:64px;">
-          {% if match.home_score is not None %}
-          <span style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:var(--fw-black);">{{ match.home_score }} - {{ match.away_score }}</span>
-          {% else %}
-          <span class="text-xs text-muted">{{ match.match_date|date:"d M H:i" }}</span>
-          {% endif %}
-        </div>
-        <span style="flex:1;text-align:left;font-weight:var(--fw-semibold);">{{ match.away_team }}</span>
-      </div>
-      {% if match.status == "scheduled" %}
-      <div style="margin-top:var(--s3);text-align:center;">
-        <a href="{% url 'predictions:predict' slug=quiniela.slug match_id=match.id %}"
-           class="btn btn-primary btn-sm">
-          <i class="bi bi-pencil-fill"></i> Pronosticar (legacy)
-        </a>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-  {% endfor %}
-{% else %}
-  <div class="empty-state" style="padding: var(--s6) var(--s4);">
-    <i class="bi bi-calendar3 empty-state__icon"></i>
-    <p class="empty-state__subtitle">No hay partidos cargados aún.</p>
-  </div>
-{% endif %}
-
+<div class="empty-state" style="padding: var(--s6) var(--s4);">
+  <i class="bi bi-calendar3 empty-state__icon"></i>
+  <p class="empty-state__subtitle">No hay jornadas disponibles aún.</p>
+</div>
 {% if user.is_superuser %}
 <div class="card" style="border: 1px solid var(--warning, #f59e0b); margin-top: var(--s4);">
   <div class="card__body">

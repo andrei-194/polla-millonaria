@@ -1,12 +1,7 @@
 from django.contrib import admin
 from django.contrib import messages
 
-from .models import Score, ReglaPuntuacion, PuntuacionEvento, RankingFecha, RankingAcumulado
-
-
-@admin.register(Score)
-class ScoreAdmin(admin.ModelAdmin):
-    list_display = ("user", "match", "quiniela", "points", "hit_type", "calculated_at")
+from .models import ReglaPuntuacion, PuntuacionEvento, RankingFecha, RankingAcumulado
 
 
 @admin.register(ReglaPuntuacion)

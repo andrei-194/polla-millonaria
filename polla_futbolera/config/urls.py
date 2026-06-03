@@ -11,7 +11,5 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.infrastructure.urls")),
     path("quinielas/", include("apps.quinielas.infrastructure.urls")),
     path("torneos/", include("apps.tournaments.infrastructure.urls")),
-    path("pronosticos/", include("apps.predictions.infrastructure.urls")),
-    path("scoring/", include("apps.scoring.infrastructure.urls")),
     path("notificaciones/", include("apps.notifications.infrastructure.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

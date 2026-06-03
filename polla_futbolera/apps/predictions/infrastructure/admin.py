@@ -2,12 +2,7 @@ from django.contrib import admin
 from django.contrib import messages
 
 from ..application.services import PredictionService
-from .models import Prediction, TipoEvento, EventoPartido, PronosticoEvento
-
-
-@admin.register(Prediction)
-class PredictionAdmin(admin.ModelAdmin):
-    list_display = ("user", "match", "quiniela", "home_goals", "away_goals", "submitted_at")
+from .models import TipoEvento, EventoPartido, PronosticoEvento
 
 
 @admin.register(TipoEvento)
