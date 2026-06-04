@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Registrarse — Polla Futbolera{% endblock %}
+
+{% block full_page %}
+<div class="auth-screen">
+
+  <div class="auth-brand">
+    <i class="bi bi-trophy-fill auth-brand__icon"></i>
+    <div class="auth-brand__name">Polla Futbolera</div>
+    <div class="auth-brand__tagline">Registrate para unirte a la polla</div>
+  </div>
+
+  {% if messages %}
+  <div style="width:100%;max-width:400px;margin-bottom:1rem;display:flex;flex-direction:column;gap:8px;position:relative;z-index:1;">
+    {% for message in messages %}
+    <div class="app-toast app-toast--{% if message.tags == 'error' %}error{% else %}info{% endif %}">
+      <i class="bi bi-{% if message.tags == 'error' %}x-circle-fill{% else %}info-circle-fill{% endif %}"></i>
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="auth-card">
+    <h2 class="auth-card__title">Crear cuenta</h2>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% for field in form %}
+      <div class="form-field">
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        <input
+          type="{{ field.field.widget.input_type }}"
+          id="{{ field.id_for_label }}"
+          name="{{ field.html_name }}"
+          class="form-input {% if field.errors %}form-input--error{% endif %}"
+          placeholder="{% if field.html_name == 'username' %}Tu nombre de usuario{% elif field.html_name == 'email' %}tu@email.com{% elif field.html_name == 'password1' %}Mínimo 8 caracteres{% elif field.html_name == 'password2' %}Repetí la contraseña{% endif %}"
+          {% if field.value and field.field.widget.input_type != 'password' %}value="{{ field.value }}"{% endif %}
+          {% if forloop.first %}autofocus{% endif %}
+        >
+        {% for error in field.errors %}
+        <div class="form-error">
+          <i class="bi bi-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+
+      <div class="mt-6">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-person-check"></i> Unirme a la polla
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="auth-footer">
+    ¿Ya tenés cuenta?
+    <a href="{% url 'accounts:login' %}">Iniciar sesión →</a>
+  </div>
+
+</div>
+{% endblock full_page %}

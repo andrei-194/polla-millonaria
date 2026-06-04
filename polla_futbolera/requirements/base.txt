@@ -5,3 +5,4 @@ whitenoise[brotli]==6.*
 httpx==0.*
 python-decouple==3.*
 Pillow==10.*
+qrcode==8.*

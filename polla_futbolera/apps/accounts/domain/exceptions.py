@@ -11,3 +11,15 @@ class InvalidCredentialsError(DomainException):
 
 class ProfileNotFoundError(DomainException):
     pass
+
+
+class InvalidInvitationCodeError(DomainException):
+    pass
+
+
+class InvitationCodeExhaustedError(DomainException):
+    pass
+
+
+class InvitationCodeInactiveError(DomainException):
+    pass
