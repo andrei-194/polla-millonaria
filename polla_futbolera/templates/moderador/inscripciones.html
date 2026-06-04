@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Inscripciones — {{ quiniela.name }}{% endblock %}
-{% block page_title %}Inscripciones{% endblock %}
+{% block title %}Participantes — {{ quiniela.name }}{% endblock %}
+{% block page_title %}Participantes{% endblock %}
 {% block nav_panel %}active{% endblock %}
 {% block nav_gestion %}active{% endblock %}
 
@@ -31,7 +31,7 @@
         {{ publicos_pendientes }} usuario{% if publicos_pendientes != 1 %}s{% endif %} sin rol de jugador
       </div>
       <div class="text-xs text-muted" style="margin-bottom: var(--s3);">
-        Para poder inscribir a alguien en esta quiniela, primero debes asignarle el rol de <strong>Jugador</strong>
+        Para poder unir a alguien a este reto, primero debes asignarle el rol de <strong>Jugador</strong>
         desde la gestión de usuarios. Es un paso previo obligatorio.
       </div>
       <a href="{% url 'quinielas:moderador_jugadores' %}" class="btn btn-secondary btn-sm">
@@ -44,7 +44,7 @@
 
 {# --- Paso 2: formulario de inscripción --- #}
 <div class="section-title">
-  Inscribir jugador en la quiniela
+  Unir jugador al reto
   {% if jugadores_disponibles %}
     <span class="badge badge--open" style="margin-left: var(--s2);">{{ jugadores_disponibles }} disponible{% if jugadores_disponibles != 1 %}s{% endif %}</span>
   {% endif %}
@@ -66,7 +66,7 @@
   <i class="bi bi-person-check empty-state__icon"></i>
   <p class="empty-state__subtitle">
     {% if inscripciones %}
-      Todos los jugadores activos ya están inscritos en esta quiniela.
+      Todos los jugadores activos ya están en este reto.
     {% else %}
       No hay jugadores con rol asignado para inscribir.
       {% if publicos_pendientes %}
@@ -79,7 +79,7 @@
 
 {# --- Lista de inscritos --- #}
 <div class="section-title">
-  Jugadores inscritos
+  Jugadores en el reto
   <span class="badge badge--open" style="margin-left: var(--s2);">{{ total_inscritos }}</span>
 </div>
 
@@ -93,12 +93,12 @@
       {{ inscripcion.jugador.username }}
       {% if not inscripcion.activa %}<span class="badge badge--closed">Baja</span>{% endif %}
     </div>
-    <div class="text-xs text-muted">Inscrito el {{ inscripcion.inscrito_en|date:"d M Y" }}</div>
+    <div class="text-xs text-muted">Unido el {{ inscripcion.inscrito_en|date:"d M Y" }}</div>
   </div>
   {% if inscripcion.activa %}
   <form method="post"
         action="{% url 'quinielas:moderador_dar_baja' slug=quiniela.slug inscripcion_id=inscripcion.id %}"
-        onsubmit="return confirm('¿Dar de baja a {{ inscripcion.jugador.username }} de esta quiniela?')">
+        onsubmit="return confirm('¿Dar de baja a {{ inscripcion.jugador.username }} de este reto?')">
     {% csrf_token %}
     <button type="submit" class="btn-icon" style="color: var(--danger);" aria-label="Dar de baja">
       <i class="bi bi-person-dash"></i>
@@ -109,7 +109,7 @@
 {% empty %}
 <div class="empty-state" style="padding: var(--s5) var(--s4);">
   <i class="bi bi-people empty-state__icon"></i>
-  <p class="empty-state__subtitle">Aún no hay jugadores inscritos en esta quiniela.</p>
+  <p class="empty-state__subtitle">Aún no hay jugadores en este reto.</p>
 </div>
 {% endfor %}
 

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ evento.tipo_evento.nombre }} — Polla Futbolera{% endblock %}
+{% block title %}{{ evento.tipo_evento.nombre }} — Toque{% endblock %}
 {% block page_title %}{{ evento.tipo_evento.nombre }}{% endblock %}
 {% block nav_predict %}active{% endblock %}
 
@@ -86,7 +86,7 @@
 
   <button type="submit" class="btn btn-primary" style="width:100%;">
     <i class="bi bi-check-circle-fill"></i>
-    {% if pronostico_existente %}Actualizar pronóstico{% else %}Guardar pronóstico{% endif %}
+    {% if pronostico_existente %}Actualizar jugada{% else %}Guardar jugada{% endif %}
   </button>
 </form>
 

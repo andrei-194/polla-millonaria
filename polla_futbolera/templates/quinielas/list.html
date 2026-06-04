@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Polla Futbolera — Quinielas de fútbol con amigos{% endblock %}
-{% block page_title %}Quinielas{% endblock %}
+{% block title %}Toque — Retos de fútbol con amigos{% endblock %}
+{% block page_title %}Retos{% endblock %}
 {% block nav_quinielas %}active{% endblock %}
 
 {% block content %}
@@ -9,13 +9,13 @@
 
 <div class="guest-cta">
   <div class="guest-cta__orb"></div>
-  <p class="guest-cta__headline">Pronosticá.<br>Competí. Ganá.</p>
-  <p class="guest-cta__sub">Quinielas privadas de fútbol con amigos.</p>
+  <p class="guest-cta__headline">Jugá.<br>Competí. Dominá.</p>
+  <p class="guest-cta__sub">Retos privados de fútbol con amigos.</p>
   {% if quinielas or total_jugadores %}
   <div class="guest-cta__stats">
     <span class="guest-cta__stat-dot"></span>
     <span>
-      {% if quinielas %}{{ quinielas|length }} quiniela{% if quinielas|length != 1 %}s{% endif %} activa{% if quinielas|length != 1 %}s{% endif %}{% endif %}{% if quinielas and total_jugadores %} · {% endif %}{% if total_jugadores %}{{ total_jugadores }} jugador{% if total_jugadores != 1 %}es{% endif %}{% endif %}
+      {% if quinielas %}{{ quinielas|length }} reto{% if quinielas|length != 1 %}s{% endif %} activo{% if quinielas|length != 1 %}s{% endif %}{% endif %}{% if quinielas and total_jugadores %} · {% endif %}{% if total_jugadores %}{{ total_jugadores }} jugador{% if total_jugadores != 1 %}es{% endif %}{% endif %}
     </span>
   </div>
   {% endif %}
@@ -32,12 +32,12 @@
   <div class="landing-step-arrow"><i class="bi bi-arrow-right"></i></div>
   <div class="landing-step">
     <div class="landing-step__num">2</div>
-    <strong>Inscribite</strong>
+    <strong>Unite</strong>
   </div>
   <div class="landing-step-arrow"><i class="bi bi-arrow-right"></i></div>
   <div class="landing-step">
     <div class="landing-step__num">3</div>
-    <strong>Pronosticá</strong>
+    <strong>Jugá</strong>
   </div>
 </div>
 
@@ -66,8 +66,8 @@
 {% empty %}
 <div class="empty-state">
   <i class="bi bi-trophy empty-state__icon"></i>
-  <h2 class="empty-state__title">Sin quinielas activas</h2>
-  <p class="empty-state__subtitle">Pronto habrá quinielas disponibles. Volvé más tarde.</p>
+  <h2 class="empty-state__title">Sin retos activos</h2>
+  <p class="empty-state__subtitle">Pronto habrá retos disponibles. Volvé más tarde.</p>
 </div>
 {% endfor %}
 {% endblock %}

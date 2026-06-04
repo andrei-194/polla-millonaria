@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#070c14">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <title>{% block title %}Polla Futbolera{% endblock %}</title>
+  <title>{% block title %}Toque{% endblock %}</title>
 
   {% load static %}
 
@@ -35,7 +35,7 @@
     <span class="btn-icon btn-icon--placeholder" aria-hidden="true"></span>
     {% endblock %}
 
-    <h1 class="app-header__title">{% block page_title %}Polla Futbolera{% endblock %}</h1>
+    <h1 class="app-header__title">{% block page_title %}Toque{% endblock %}</h1>
 
     {% block header_action %}
     <span class="btn-icon btn-icon--placeholder" aria-hidden="true"></span>
@@ -68,9 +68,9 @@
 
     <a href="{% url 'quinielas:list' %}"
        class="bottom-nav__item {% block nav_quinielas %}{% endblock %}"
-       aria-label="Quinielas">
+       aria-label="Retos">
       <i class="bi bi-shield-fill" aria-hidden="true"></i>
-      <span>Quinielas</span>
+      <span>Retos</span>
     </a>
 
     {% if is_moderador %}
@@ -110,18 +110,18 @@
     {% elif is_jugador %}
     <a href="{% url 'quinielas:list' %}"
        class="bottom-nav__item bottom-nav__item--fab {% block nav_predict %}{% endblock %}"
-       aria-label="Pronosticar">
+       aria-label="Jugar">
       <div class="bottom-nav__fab">
         <i class="bi bi-pencil-fill" aria-hidden="true"></i>
       </div>
-      <span>Pred.</span>
+      <span>Jugadas</span>
     </a>
     {% else %}
     <span class="bottom-nav__item bottom-nav__item--fab bottom-nav__item--disabled" aria-hidden="true">
       <div class="bottom-nav__fab bottom-nav__fab--disabled">
         <i class="bi bi-lock-fill" aria-hidden="true"></i>
       </div>
-      <span>Pred.</span>
+      <span>Jugadas</span>
     </span>
     {% endif %}
 

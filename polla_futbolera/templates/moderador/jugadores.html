@@ -43,7 +43,7 @@
 </div>
 <p class="text-xs text-muted" style="margin-bottom: var(--s3);">
   Estos usuarios se registraron pero aún no tienen rol. Asígnales el rol <strong>Jugador</strong>
-  para que puedan ser inscritos en quinielas.
+  para que puedan ser unidos a retos.
 </p>
 
 {% for usuario in page_publicos %}
@@ -79,7 +79,7 @@
 </div>
 <p class="text-xs text-muted" style="margin-bottom: var(--s3);">
   Usuarios con rol Jugador. Puedes suspender su acceso temporalmente o quitarles el rol
-  (lo que también los da de baja en sus quinielas activas).
+  (lo que también los da de baja en sus retos activos).
 </p>
 
 {% for jugador in page_jugadores %}
@@ -116,7 +116,7 @@
 
     {# Quitar rol Jugador: lo devuelve a público y da de baja en quinielas #}
     <form method="post" action="{% url 'quinielas:moderador_quitar_jugador' user_id=jugador.id %}"
-          onsubmit="return confirm('¿Quitar el rol Jugador a {{ jugador.username }}? Será dado de baja en todas sus quinielas activas.')">
+          onsubmit="return confirm('¿Quitar el rol Jugador a {{ jugador.username }}? Será dado de baja en todos sus retos activos.')">
       {% csrf_token %}
       <button type="submit" class="btn-icon" title="Quitar rol Jugador" style="color: var(--danger);" aria-label="Quitar rol">
         <i class="bi bi-person-dash"></i>

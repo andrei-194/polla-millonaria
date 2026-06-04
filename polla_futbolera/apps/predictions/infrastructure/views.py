@@ -108,7 +108,7 @@ def pronosticar_evento_view(request, slug, evento_id):
                 evento_partido_id=evento.id,
                 valor=valor,
             ))
-            messages.success(request, "Pronóstico guardado")
+            messages.success(request, "Jugada guardada")
             numero_fecha = evento.partido.fecha.numero if evento.partido.fecha else 1
             return redirect("quinielas:fecha_detail", slug=slug, numero=numero_fecha)
         except EventoCerradoError as e:
