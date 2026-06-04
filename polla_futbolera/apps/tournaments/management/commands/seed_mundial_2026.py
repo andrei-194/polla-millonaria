@@ -306,17 +306,15 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"  Quiniela '{slug}' no encontrada."))
             return
 
-        try:
-            tipo_score = TipoEvento.objects.get(codigo="SCORE")
-            tipo_winner = TipoEvento.objects.get(codigo="WINNER")
-        except TipoEvento.DoesNotExist:
+        tipos = list(TipoEvento.objects.filter(codigo__in=["SCORE", "WINNER", "BTTS", "OU25"]))
+        if len(tipos) != 4:
             self.stdout.write(self.style.ERROR("  TipoEvento faltante. Ejecutá migrate primero."))
             return
 
         matches = Match.objects.filter(tournament=torneo, fecha__isnull=False)
         count = 0
         for match in matches:
-            for tipo in [tipo_score, tipo_winner]:
+            for tipo in tipos:
                 _, created = EventoPartido.objects.get_or_create(
                     partido=match,
                     quiniela=quiniela,
