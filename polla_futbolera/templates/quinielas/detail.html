@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ quiniela.name }} — Polla Futbolera{% endblock %}
+{% block title %}{{ quiniela.name }} — Toque{% endblock %}
 {% block page_title %}{{ quiniela.name }}{% endblock %}
 {% block nav_quinielas %}active{% endblock %}
 
@@ -29,14 +29,14 @@
 <!-- Acciones principales -->
 <div style="display: flex; flex-direction: column; gap: var(--s3); margin-bottom: var(--s5);">
   <a href="{% url 'quinielas:fechas_list' slug=quiniela.slug %}" class="btn btn-primary" style="justify-content: center;">
-    <i class="bi bi-pencil-fill"></i> Pronosticar
+    <i class="bi bi-pencil-fill"></i> Hacer jugadas
   </a>
   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3);">
     <a href="{% url 'quinielas:leaderboard' slug=quiniela.slug %}" class="btn btn-secondary" style="justify-content: center;">
       <i class="bi bi-bar-chart-fill"></i> Ranking
     </a>
     <a href="{% url 'quinielas:mis_pronosticos' slug=quiniela.slug %}" class="btn btn-secondary" style="justify-content: center;">
-      <i class="bi bi-clock-history"></i> Mis pred.
+      <i class="bi bi-clock-history"></i> Mis jugadas
     </a>
   </div>
 </div>
@@ -113,13 +113,13 @@
 {% else %}
   <div class="empty-state" style="padding: var(--s6) var(--s4);">
     <i class="bi bi-bar-chart empty-state__icon"></i>
-    <p class="empty-state__subtitle">Aún no hay puntuaciones en esta quiniela.</p>
+    <p class="empty-state__subtitle">Aún no hay puntuaciones en este reto.</p>
   </div>
 {% endif %}
 
 {% if not user.is_authenticated %}
 <div style="margin-top: var(--s6); text-align: center;">
-  <p class="text-sm text-muted" style="margin-bottom: var(--s3);">¿Querés competir? Registrate y pedile al moderador que te inscriba.</p>
+  <p class="text-sm text-muted" style="margin-bottom: var(--s3);">¿Querés competir? Registrate y pedile al moderador que te una al reto.</p>
   <a href="{% url 'accounts:register' %}" class="btn btn-primary">
     <i class="bi bi-person-plus"></i> Registrarme
   </a>

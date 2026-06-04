@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Mis pronósticos — {{ quiniela.name }}{% endblock %}
-{% block page_title %}Mis pronósticos{% endblock %}
+{% block title %}Mis jugadas — {{ quiniela.name }}{% endblock %}
+{% block page_title %}Mis jugadas{% endblock %}
 {% block nav_quinielas %}active{% endblock %}
 
 {% block header_back %}
@@ -44,7 +44,7 @@
 {% else %}
   <div class="empty-state" style="padding: var(--s6) var(--s4);">
     <i class="bi bi-pencil empty-state__icon"></i>
-    <p class="empty-state__subtitle">Aún no has enviado ningún pronóstico.</p>
+    <p class="empty-state__subtitle">Aún no has hecho ninguna jugada.</p>
     <a href="{% url 'quinielas:fechas_list' slug=quiniela.slug %}" class="btn btn-primary" style="margin-top:var(--s4);">
       <i class="bi bi-calendar3"></i> Ver fechas
     </a>

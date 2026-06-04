@@ -157,7 +157,7 @@ def moderador_quitar_jugador(request, user_id):
     grupo_jugador = Group.objects.get(name="Jugador")
     usuario.groups.remove(grupo_jugador)
     Inscripcion.objects.filter(jugador=usuario, activa=True).update(activa=False)
-    messages.success(request, f"{usuario.username} ya no es Jugador y fue dado de baja de sus quinielas activas")
+    messages.success(request, f"{usuario.username} ya no es Jugador y fue dado de baja de sus retos activos")
     return redirect("quinielas:moderador_jugadores")
 
 
@@ -210,7 +210,7 @@ def moderador_inscribir(request, slug):
                 quiniela_id=quiniela.id,
                 moderador_id=request.user.id,
             ))
-            messages.success(request, f"{form.cleaned_data['jugador'].username} inscrito en {quiniela.name}")
+            messages.success(request, f"{form.cleaned_data['jugador'].username} unido a {quiniela.name}")
         except JugadorYaInscritoError as e:
             messages.error(request, str(e))
     return redirect("quinielas:moderador_inscripciones", slug=slug)
@@ -223,7 +223,7 @@ def moderador_dar_baja(request, slug, inscripcion_id):
     service = QuinielaService()
     try:
         service.dar_de_baja(inscripcion_id)
-        messages.success(request, "Jugador dado de baja de la quiniela")
+        messages.success(request, "Jugador dado de baja del reto")
     except JugadorNoInscritoError as e:
         messages.error(request, str(e))
     return redirect("quinielas:moderador_inscripciones", slug=slug)
