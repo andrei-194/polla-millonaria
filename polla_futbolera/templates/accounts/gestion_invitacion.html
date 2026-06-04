@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Código de invitación — Polla Futbolera{% endblock %}
+{% block page_title %}Código de invitación{% endblock %}
+
+{% block header_back %}
+<a href="{% url 'quinielas:moderador_dashboard' %}" class="btn-icon" aria-label="Volver">
+  <i class="bi bi-arrow-left"></i>
+</a>
+{% endblock %}
+
+{% block content %}
+
+{% if codigo_activo %}
+<div class="card mb-3" style="margin-bottom: var(--s4);">
+  <div class="card__body" style="display:flex;flex-direction:column;align-items:center;gap:var(--s4);padding:var(--s5);">
+
+    <img src="{{ qr_data_url }}" alt="QR de invitación" style="border-radius:12px;width:220px;height:220px;">
+
+    <div style="width:100%;text-align:center;">
+      <div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--s2);">Link de invitación</div>
+      <div style="display:flex;gap:var(--s2);align-items:center;background:var(--color-surface-2);border-radius:8px;padding:var(--s2) var(--s3);">
+        <span id="invite-url" style="font-size:var(--text-xs);word-break:break-all;flex:1;color:var(--color-text-muted);">{{ invite_url }}</span>
+        <button type="button" onclick="copyLink()" class="btn-icon" style="flex-shrink:0;" title="Copiar link">
+          <i class="bi bi-clipboard" id="copy-icon"></i>
+        </button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:var(--s4);font-size:var(--text-sm);color:var(--color-text-muted);">
+      <span><i class="bi bi-people"></i> {{ codigo_activo.uses_count }}{% if codigo_activo.max_uses %} / {{ codigo_activo.max_uses }}{% endif %} usos</span>
+      {% if codigo_activo.expires_at %}
+      <span><i class="bi bi-clock"></i> Expira {{ codigo_activo.expires_at|date:"d/m/Y H:i" }}</span>
+      {% else %}
+      <span><i class="bi bi-infinity"></i> Sin expiración</span>
+      {% endif %}
+    </div>
+
+    <form method="post" style="width:100%;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="desactivar">
+      <button type="submit" class="btn btn-secondary"
+        onclick="return confirm('¿Desactivar el código actual? Los links existentes dejarán de funcionar.')">
+        <i class="bi bi-x-circle"></i> Desactivar código
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  function copyLink() {
+    navigator.clipboard.writeText('{{ invite_url }}').then(function() {
+      var icon = document.getElementById('copy-icon');
+      icon.className = 'bi bi-clipboard-check';
+      setTimeout(function() { icon.className = 'bi bi-clipboard'; }, 2000);
+    });
+  }
+</script>
+
+{% else %}
+<div class="empty-state" style="padding:var(--s6) var(--s4);margin-bottom:var(--s4);">
+  <i class="bi bi-qr-code empty-state__icon"></i>
+  <p class="empty-state__subtitle">No hay ningún código activo.</p>
+</div>
+{% endif %}
+
+<div class="section-title">Generar nuevo código</div>
+
+<div class="card">
+  <div class="card__body">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="action" value="generar">
+
+      {% for field in form %}
+      <div class="form-field">
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        <input
+          type="{{ field.field.widget.input_type }}"
+          id="{{ field.id_for_label }}"
+          name="{{ field.html_name }}"
+          class="form-input {% if field.errors %}form-input--error{% endif %}"
+          {% if field.value %}value="{{ field.value }}"{% endif %}
+          {% if field.field.widget.attrs.type %}type="{{ field.field.widget.attrs.type }}"{% endif %}
+        >
+        {% if field.help_text %}
+        <div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--s1);">{{ field.help_text }}</div>
+        {% endif %}
+        {% for error in field.errors %}
+        <div class="form-error"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+
+      <div style="margin-top:var(--s5);">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-qr-code"></i> Generar nuevo código
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

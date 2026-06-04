@@ -1,5 +1,10 @@
+import uuid
+from datetime import timedelta
+
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -35,3 +40,46 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"Profile({self.user.username})"
+
+
+def _default_expiry():
+    return timezone.now() + timedelta(hours=72)
+
+
+class InvitationCode(models.Model):
+    code = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="created_invitation_codes",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    uses_count = models.IntegerField(default=0)
+    max_uses = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = "accounts_invitationcode"
+        ordering = ["-created_at"]
+
+    def is_valid(self) -> bool:
+        if not self.is_active:
+            return False
+        if self.expires_at and timezone.now() >= self.expires_at:
+            return False
+        if self.max_uses is not None and self.uses_count >= self.max_uses:
+            return False
+        return True
+
+    def register_use(self):
+        self.uses_count += 1
+        self.save(update_fields=["uses_count"])
+
+    def deactivate(self):
+        self.is_active = False
+        self.save(update_fields=["is_active"])
+
+    def __str__(self):
+        return f"InvitationCode({self.code}, active={self.is_active})"
