@@ -4,7 +4,11 @@ import urllib.parse as _up
 
 DEBUG = False
 
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*.railway.app").split(",")
+_raw_hosts = config("ALLOWED_HOSTS", default="*.railway.app,localhost,127.0.0.1")
+ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(",") if h.strip()]
+_railway_public = config("RAILWAY_PUBLIC_DOMAIN", default="")
+if _railway_public and _railway_public not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_railway_public)
 
 _database_url = config("DATABASE_URL")
 _parsed = _up.urlparse(_database_url)
