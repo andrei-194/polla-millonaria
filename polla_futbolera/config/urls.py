@@ -13,3 +13,10 @@ urlpatterns = [
     path("torneos/", include("apps.tournaments.infrastructure.urls")),
     path("notificaciones/", include("apps.notifications.infrastructure.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.DEBUG:
+    try:
+        import debug_toolbar
+        urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns
+    except ImportError:
+        pass

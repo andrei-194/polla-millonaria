@@ -12,10 +12,17 @@ from ..domain.exceptions import ValorInvalidoError, EventoCerradoError
 from .models import EventoPartido, PronosticoEvento
 
 
+def _check_inscripcion(request, quiniela):
+    """Superadmin pasa libre; jugadores deben tener inscripción activa."""
+    if request.user.is_superuser:
+        return
+    get_object_or_404(Inscripcion, jugador=request.user, quiniela=quiniela, activa=True)
+
+
 @jugador_required
 def fechas_list_view(request, slug):
     quiniela = get_object_or_404(Quiniela, slug=slug)
-    get_object_or_404(Inscripcion, jugador=request.user, quiniela=quiniela, activa=True)
+    _check_inscripcion(request, quiniela)
 
     fechas = (
         Fecha.objects
@@ -33,7 +40,7 @@ def fechas_list_view(request, slug):
 @jugador_required
 def fecha_detail_view(request, slug, numero):
     quiniela = get_object_or_404(Quiniela, slug=slug)
-    get_object_or_404(Inscripcion, jugador=request.user, quiniela=quiniela, activa=True)
+    _check_inscripcion(request, quiniela)
     fecha = get_object_or_404(Fecha, torneo=quiniela.tournament, numero=numero)
 
     # Query 1: partidos de la fecha
@@ -84,7 +91,7 @@ def fecha_detail_view(request, slug, numero):
 @jugador_required
 def pronosticar_evento_view(request, slug, evento_id):
     quiniela = get_object_or_404(Quiniela, slug=slug)
-    get_object_or_404(Inscripcion, jugador=request.user, quiniela=quiniela, activa=True)
+    _check_inscripcion(request, quiniela)
     evento = get_object_or_404(
         EventoPartido.objects.select_related("tipo_evento", "partido__home_team", "partido__away_team"),
         id=evento_id, quiniela=quiniela
@@ -134,7 +141,7 @@ def pronosticar_evento_view(request, slug, evento_id):
 @jugador_required
 def mis_pronosticos_view(request, slug):
     quiniela = get_object_or_404(Quiniela, slug=slug)
-    get_object_or_404(Inscripcion, jugador=request.user, quiniela=quiniela, activa=True)
+    _check_inscripcion(request, quiniela)
 
     qs = (
         PronosticoEvento.objects
