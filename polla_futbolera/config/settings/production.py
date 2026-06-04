@@ -4,9 +4,11 @@ import urllib.parse as _up
 
 DEBUG = False
 
-_raw_hosts = config("ALLOWED_HOSTS", default="*.railway.app,*.up.railway.app,localhost,127.0.0.1")
-ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(",") if h.strip()]
+# RAILWAY_PUBLIC_DOMAIN es inyectada automáticamente por Railway con el dominio real del servicio.
+# ALLOWED_HOSTS en el panel se usa solo para dominios custom adicionales.
 _railway_public = config("RAILWAY_PUBLIC_DOMAIN", default="")
+_extra = config("ALLOWED_HOSTS", default="localhost,127.0.0.1")
+ALLOWED_HOSTS = [h.strip() for h in _extra.split(",") if h.strip()]
 if _railway_public and _railway_public not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_railway_public)
 
