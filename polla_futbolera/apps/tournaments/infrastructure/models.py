@@ -73,6 +73,9 @@ class Match(models.Model):
     class Meta:
         db_table = "tournaments_match"
         ordering = ["match_date"]
+        indexes = [
+            models.Index(fields=["tournament", "match_date"], name="idx_match_tournament_date"),
+        ]
 
     def has_result(self) -> bool:
         return self.home_score is not None and self.away_score is not None

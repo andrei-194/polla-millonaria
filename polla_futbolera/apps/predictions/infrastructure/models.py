@@ -44,6 +44,10 @@ class EventoPartido(models.Model):
         db_table = "predictions_evento_partido"
         unique_together = ("partido", "quiniela", "tipo_evento")
         verbose_name = "Evento de Partido"
+        indexes = [
+            models.Index(fields=["partido", "quiniela"], name="idx_ep_partido_quiniela"),
+            models.Index(fields=["quiniela", "estado"], name="idx_ep_quiniela_estado"),
+        ]
 
     def __str__(self):
         return f"{self.partido} — {self.tipo_evento.codigo} [{self.estado}]"
