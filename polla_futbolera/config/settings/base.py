@@ -18,9 +18,7 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 
-THIRD_PARTY_APPS = [
-    "django_q",
-]
+THIRD_PARTY_APPS = []
 
 LOCAL_APPS = [
     "apps.accounts",
@@ -98,15 +96,3 @@ PREDICTION_DEADLINE_MINUTES = config("PREDICTION_DEADLINE_MINUTES", default=60, 
 FOOTBALL_API_KEY = config("FOOTBALL_API_KEY", default="")
 FOOTBALL_API_BASE_URL = config("FOOTBALL_API_BASE_URL", default="https://api.football-data.org/v4")
 
-Q_CLUSTER = {
-    "name": "polla_futbolera",
-    "workers": 2,
-    "recycle": 500,
-    "timeout": 60,
-    "compress": True,
-    "save_limit": 250,
-    "queue_limit": 500,
-    "cpu_affinity": 1,
-    "label": "Django Q",
-    "orm": "default",
-}
