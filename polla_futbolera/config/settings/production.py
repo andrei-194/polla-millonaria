@@ -4,7 +4,7 @@ import urllib.parse as _up
 
 DEBUG = False
 
-_raw_hosts = config("ALLOWED_HOSTS", default="*.railway.app,localhost,127.0.0.1")
+_raw_hosts = config("ALLOWED_HOSTS", default="*.railway.app,*.up.railway.app,localhost,127.0.0.1")
 ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(",") if h.strip()]
 _railway_public = config("RAILWAY_PUBLIC_DOMAIN", default="")
 if _railway_public and _railway_public not in ALLOWED_HOSTS:
