@@ -21,6 +21,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = []
 
 LOCAL_APPS = [
+    "shared",
     "apps.accounts",
     "apps.quinielas",
     "apps.tournaments",
