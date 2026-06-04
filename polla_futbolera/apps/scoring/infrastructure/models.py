@@ -43,6 +43,9 @@ class PuntuacionEvento(models.Model):
         db_table = "scoring_puntuacion_evento"
         unique_together = ("usuario", "evento_partido")
         verbose_name = "Puntuación de Evento"
+        indexes = [
+            models.Index(fields=["quiniela", "usuario"], name="idx_pun_quiniela_usuario"),
+        ]
 
     def __str__(self):
         return f"{self.usuario.username}: {self.puntos}pts ({self.codigo_acierto})"
@@ -67,6 +70,9 @@ class RankingFecha(models.Model):
         unique_together = ("quiniela", "fecha", "usuario")
         ordering = ["posicion"]
         verbose_name = "Ranking por Fecha"
+        indexes = [
+            models.Index(fields=["quiniela", "fecha", "posicion"], name="idx_rf_quiniela_fecha_pos"),
+        ]
 
     def __str__(self):
         return f"#{self.posicion} {self.usuario.username} — {self.fecha} ({self.puntos}pts)"
@@ -91,6 +97,9 @@ class RankingAcumulado(models.Model):
         unique_together = ("quiniela", "usuario")
         ordering = ["posicion"]
         verbose_name = "Ranking Acumulado"
+        indexes = [
+            models.Index(fields=["quiniela", "posicion"], name="idx_ranking_acum_quiniela_pos"),
+        ]
 
     def __str__(self):
         return f"#{self.posicion} {self.usuario.username} — {self.quiniela} ({self.puntos_total}pts)"

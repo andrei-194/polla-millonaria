@@ -63,6 +63,9 @@ class InvitationCode(models.Model):
     class Meta:
         db_table = "accounts_invitationcode"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["is_active", "created_at"], name="idx_invitation_active_created"),
+        ]
 
     def is_valid(self) -> bool:
         if not self.is_active:

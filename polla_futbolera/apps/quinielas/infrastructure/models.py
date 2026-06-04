@@ -17,6 +17,9 @@ class Quiniela(models.Model):
     class Meta:
         db_table = "quinielas_quiniela"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["status", "-created_at"], name="idx_quiniela_status_created"),
+        ]
 
     def __str__(self):
         return self.name
@@ -39,6 +42,10 @@ class Inscripcion(models.Model):
     class Meta:
         db_table = "quinielas_inscripcion"
         unique_together = ("jugador", "quiniela")
+        indexes = [
+            models.Index(fields=["jugador", "activa"], name="idx_inscripcion_jugador_activa"),
+            models.Index(fields=["quiniela", "activa"], name="idx_ins_quiniela_activa"),
+        ]
 
     def __str__(self):
         return f"{self.jugador.username} → {self.quiniela.name}"
