@@ -36,7 +36,7 @@ services:
       db:
         condition: service_healthy
     env_file:
-      - .env.example
+      - .env
 
   qcluster:
     build:
