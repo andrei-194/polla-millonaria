@@ -12,82 +12,151 @@
 
 {% block content %}
 
-<!-- Partido -->
-<div class="match-scorer" style="margin-bottom: var(--s4);">
-  <div class="match-scorer__team">
-    <div class="match-scorer__badge">{{ evento.partido.home_team|slice:":3"|upper }}</div>
-    <span class="match-scorer__name">{{ evento.partido.home_team }}</span>
+<!-- Hero del partido con escudos grandes -->
+<div class="predict-match-hero">
+  <div class="predict-team">
+    {% if evento.partido.home_team.logo_url %}
+    <img src="{{ evento.partido.home_team.logo_url }}" alt="{{ evento.partido.home_team.name }}"
+         class="team-crest team-crest--lg">
+    {% else %}
+    <div class="team-crest team-crest--lg team-crest--fallback">{{ evento.partido.home_team.name|slice:":3"|upper }}</div>
+    {% endif %}
+    <span class="predict-team__name">{{ evento.partido.home_team.name }}</span>
   </div>
-  <div class="match-scorer__inputs">
-    <span style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:var(--fw-black);padding:0 var(--s3);">VS</span>
+
+  <div class="predict-match-hero__center">
+    <span class="predict-vs">VS</span>
+    <span class="predict-match-hero__time">
+      <i class="bi bi-calendar3"></i> {{ evento.partido.match_date|date:"d M · H:i" }}
+    </span>
+    <span class="predict-match-hero__deadline">
+      <i class="bi bi-lock"></i> Cierra {{ evento.plazo_cierre|date:"d M · H:i" }}
+    </span>
   </div>
-  <div class="match-scorer__team">
-    <div class="match-scorer__badge">{{ evento.partido.away_team|slice:":3"|upper }}</div>
-    <span class="match-scorer__name">{{ evento.partido.away_team }}</span>
+
+  <div class="predict-team">
+    {% if evento.partido.away_team.logo_url %}
+    <img src="{{ evento.partido.away_team.logo_url }}" alt="{{ evento.partido.away_team.name }}"
+         class="team-crest team-crest--lg">
+    {% else %}
+    <div class="team-crest team-crest--lg team-crest--fallback">{{ evento.partido.away_team.name|slice:":3"|upper }}</div>
+    {% endif %}
+    <span class="predict-team__name">{{ evento.partido.away_team.name }}</span>
   </div>
 </div>
 
 <!-- Pregunta -->
-<div class="card mb-4" style="margin-bottom: var(--s4);">
-  <div class="card__body">
-    <div style="font-weight: var(--fw-semibold); margin-bottom: var(--s2);">{{ evento.tipo_evento.descripcion }}</div>
-    <div class="text-xs text-muted">
-      <i class="bi bi-clock"></i> Cierra {{ evento.plazo_cierre|date:"d M H:i" }}
-    </div>
-  </div>
-</div>
+<p class="predict-question">{{ evento.tipo_evento.descripcion }}</p>
 
 <!-- Formulario -->
-<form method="post">
+<form method="post" id="predictForm">
   {% csrf_token %}
 
   {% if evento.tipo_evento.codigo == 'SCORE' %}
-  <div class="card mb-4" style="margin-bottom: var(--s4);">
-    <div class="card__body">
-      <label style="display:block;margin-bottom:var(--s2);font-weight:var(--fw-medium);">Marcador (local - visitante)</label>
-      <div style="display:flex;align-items:center;gap:var(--s3);">
-        <input type="number" name="home" id="home" min="0" max="20" inputmode="numeric"
-               class="match-scorer__input"
-               value="{{ score_home|default:'' }}"
-               required>
-        <span style="font-size:var(--text-xl);font-weight:var(--fw-black);">-</span>
-        <input type="number" name="away" id="away" min="0" max="20" inputmode="numeric"
-               class="match-scorer__input"
-               value="{{ score_away|default:'' }}"
-               required>
-      </div>
-    </div>
+  <!-- Marcador: inputs con escudos -->
+  <div class="predict-score-row">
+    {% if evento.partido.home_team.logo_url %}
+    <img src="{{ evento.partido.home_team.logo_url }}" alt="{{ evento.partido.home_team.name }}"
+         class="team-crest team-crest--sm">
+    {% else %}
+    <div class="team-crest team-crest--sm team-crest--fallback">{{ evento.partido.home_team.name|slice:":3"|upper }}</div>
+    {% endif %}
+
+    <input type="number" name="home" id="home" min="0" max="20" inputmode="numeric"
+           class="predict-score-input" value="{{ score_home|default:'' }}" required>
+    <span class="predict-score-sep">—</span>
+    <input type="number" name="away" id="away" min="0" max="20" inputmode="numeric"
+           class="predict-score-input" value="{{ score_away|default:'' }}" required>
+
+    {% if evento.partido.away_team.logo_url %}
+    <img src="{{ evento.partido.away_team.logo_url }}" alt="{{ evento.partido.away_team.name }}"
+         class="team-crest team-crest--sm">
+    {% else %}
+    <div class="team-crest team-crest--sm team-crest--fallback">{{ evento.partido.away_team.name|slice:":3"|upper }}</div>
+    {% endif %}
   </div>
 
   {% else %}
-  <div class="card mb-4" style="margin-bottom: var(--s4);">
-    <div class="card__body" style="display:flex;flex-direction:column;gap:var(--s3);">
-      {% for choice in evento.tipo_evento.config.choices %}
-      <label style="display:flex;align-items:center;gap:var(--s3);cursor:pointer;padding:var(--s3);border-radius:var(--radius-md);border:1px solid var(--border-subtle);">
-        <input type="radio" name="valor" value="{{ choice }}"
-               {% if pronostico_existente.valor == choice %}checked{% endif %}
-               required style="accent-color:var(--accent);">
-        <span style="font-weight:var(--fw-medium);">
-          {% if evento.tipo_evento.codigo == 'WINNER' %}
-            {% if choice == 'H' %}Local{% elif choice == 'D' %}Empate{% elif choice == 'A' %}Visitante{% else %}{{ choice }}{% endif %}
-          {% elif evento.tipo_evento.codigo == 'BTTS' %}
-            {% if choice == 'yes' %}Sí, anotan ambos{% else %}No anotan ambos{% endif %}
-          {% elif evento.tipo_evento.codigo == 'OU25' %}
-            {% if choice == 'over' %}Más de 2.5 goles{% else %}Menos de 2.5 goles{% endif %}
-          {% else %}
-            {{ choice }}
+  <!-- Choices: WINNER / BTTS / OU25 -->
+  <div class="predict-choices">
+    {% for choice in evento.tipo_evento.config.choices %}
+    <label class="predict-choice {% if pronostico_existente.valor == choice %}predict-choice--selected{% endif %}"
+           data-value="{{ choice }}">
+      <input type="radio" name="valor" value="{{ choice }}"
+             {% if pronostico_existente.valor == choice %}checked{% endif %}
+             required style="display:none;">
+
+      <span class="predict-choice__icon">
+        {% if evento.tipo_evento.codigo == 'WINNER' %}
+          {% if choice == 'H' %}
+            {% if evento.partido.home_team.logo_url %}
+            <img src="{{ evento.partido.home_team.logo_url }}" alt="{{ evento.partido.home_team.name }}" class="team-crest team-crest--sm">
+            {% else %}
+            <div class="team-crest team-crest--sm team-crest--fallback">{{ evento.partido.home_team.name|slice:":3"|upper }}</div>
+            {% endif %}
+          {% elif choice == 'D' %}
+            <i class="bi bi-dash-circle" style="font-size:26px;color:var(--text-secondary);"></i>
+          {% elif choice == 'A' %}
+            {% if evento.partido.away_team.logo_url %}
+            <img src="{{ evento.partido.away_team.logo_url }}" alt="{{ evento.partido.away_team.name }}" class="team-crest team-crest--sm">
+            {% else %}
+            <div class="team-crest team-crest--sm team-crest--fallback">{{ evento.partido.away_team.name|slice:":3"|upper }}</div>
+            {% endif %}
           {% endif %}
-        </span>
-      </label>
-      {% endfor %}
-    </div>
+        {% elif evento.tipo_evento.codigo == 'BTTS' %}
+          {% if choice == 'yes' %}
+          <i class="bi bi-check2-circle" style="font-size:24px;color:var(--green);"></i>
+          {% else %}
+          <i class="bi bi-x-circle" style="font-size:24px;color:var(--danger);"></i>
+          {% endif %}
+        {% elif evento.tipo_evento.codigo == 'OU25' %}
+          {% if choice == 'over' %}
+          <i class="bi bi-graph-up-arrow" style="font-size:24px;color:var(--green);"></i>
+          {% else %}
+          <i class="bi bi-graph-down-arrow" style="font-size:24px;color:var(--danger);"></i>
+          {% endif %}
+        {% else %}
+          <i class="bi bi-circle" style="font-size:20px;color:var(--text-muted);"></i>
+        {% endif %}
+      </span>
+
+      <span class="predict-choice__label">
+        {% if evento.tipo_evento.codigo == 'WINNER' %}
+          {% if choice == 'H' %}{{ evento.partido.home_team.name }} gana
+          {% elif choice == 'D' %}Empate
+          {% elif choice == 'A' %}{{ evento.partido.away_team.name }} gana
+          {% else %}{{ choice }}{% endif %}
+        {% elif evento.tipo_evento.codigo == 'BTTS' %}
+          {% if choice == 'yes' %}Sí, ambos anotan{% else %}No, alguno se queda en 0{% endif %}
+        {% elif evento.tipo_evento.codigo == 'OU25' %}
+          {% if choice == 'over' %}Más de 2.5 goles{% else %}Menos de 2.5 goles{% endif %}
+        {% else %}{{ choice }}{% endif %}
+      </span>
+
+      <span class="predict-choice__check"><i class="bi bi-check-circle-fill"></i></span>
+    </label>
+    {% endfor %}
   </div>
   {% endif %}
 
-  <button type="submit" class="btn btn-primary" style="width:100%;">
+  <button type="submit" class="btn btn-primary predict-submit">
     <i class="bi bi-check-circle-fill"></i>
     {% if pronostico_existente %}Actualizar jugada{% else %}Guardar jugada{% endif %}
   </button>
 </form>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.predict-choice').forEach(function(card) {
+  card.addEventListener('click', function() {
+    document.querySelectorAll('.predict-choice').forEach(function(c) {
+      c.classList.remove('predict-choice--selected');
+    });
+    this.classList.add('predict-choice--selected');
+    this.querySelector('input[type=radio]').checked = true;
+  });
+});
+</script>
 {% endblock %}

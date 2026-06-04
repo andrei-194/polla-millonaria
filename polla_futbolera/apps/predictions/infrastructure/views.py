@@ -6,6 +6,7 @@ from django.contrib import messages
 from apps.quinielas.infrastructure.models import Quiniela, Inscripcion
 from apps.quinielas.infrastructure.permissions import jugador_required
 from apps.tournaments.infrastructure.models import Match, Fecha
+from apps.scoring.infrastructure.models import PuntuacionEvento
 from ..application.services import PredictionService
 from ..application.dtos import CrearPronosticoEventoDTO
 from ..domain.exceptions import ValorInvalidoError, EventoCerradoError
@@ -70,11 +71,25 @@ def fecha_detail_view(request, slug, numero):
         )
     }
 
+    # Query 4: puntuaciones del usuario para feedback de exacto/acierto/fallo
+    puntuaciones_map = {
+        p.evento_partido_id: p
+        for p in PuntuacionEvento.objects.filter(
+            evento_partido_id__in=evento_ids,
+            usuario=request.user,
+            quiniela=quiniela,
+        )
+    }
+
     partidos_con_eventos = [
         {
             "partido": partido,
             "eventos": [
-                {"evento": e, "mi_pronostico": pronos_map.get(e.id)}
+                {
+                    "evento": e,
+                    "mi_pronostico": pronos_map.get(e.id),
+                    "mi_puntuacion": puntuaciones_map.get(e.id),
+                }
                 for e in eventos_by_partido.get(partido.id, [])
             ],
         }
