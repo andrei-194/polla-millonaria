@@ -1,5 +1,17 @@
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+from django.conf import settings
 from django.core.management.base import BaseCommand
+
+_TEAMS_DIR = Path(settings.BASE_DIR) / "static" / "img" / "teams"
+
+
+def _detect_logo(code: str) -> str:
+    for ext in (".svg", ".png"):
+        if (_TEAMS_DIR / f"{code}{ext}").exists():
+            return f"img/teams/{code}{ext}"
+    return ""
 
 
 TORNEO = {
@@ -233,15 +245,24 @@ class Command(BaseCommand):
 
         equipos = {}
         nuevos = 0
+        logos_actualizados = 0
         for code, name in EQUIPOS:
+            logo = _detect_logo(code)
             team, created = Team.objects.get_or_create(
                 external_code=code,
-                defaults={"name": name},
+                defaults={"name": name, "logo_url": logo},
             )
             if created:
                 nuevos += 1
+            elif logo and team.logo_url != logo:
+                team.logo_url = logo
+                team.save(update_fields=["logo_url"])
+                logos_actualizados += 1
             equipos[code] = team
-        self.stdout.write(f"  Equipos: {nuevos} nuevos, {len(EQUIPOS) - nuevos} ya existían")
+        self.stdout.write(
+            f"  Equipos: {nuevos} nuevos, {len(EQUIPOS) - nuevos} ya existían"
+            + (f", {logos_actualizados} logos actualizados" if logos_actualizados else "")
+        )
         return equipos
 
     def _seed_fechas(self, torneo):
