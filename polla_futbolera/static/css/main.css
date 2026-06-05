@@ -2208,3 +2208,13 @@ textarea.form-input {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+/* ── Ads ────────────────────────────────────────────────── */
+.ad-banner-wrapper {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  background: transparent;
+  padding: 4px 0;
+  max-width: 100vw;
+}
