@@ -1,0 +1,11 @@
+{% extends "admin/change_form.html" %}
+
+{% block content %}
+  {% if polling_job_id %}
+    <div data-polling-job-id="{{ polling_job_id }}"
+         style="background:#fff3cd;border:1px solid #ffc107;padding:12px 16px;margin-bottom:16px;border-radius:4px;">
+      ⏳ <strong>Job en progreso.</strong> La página se recargará automáticamente cuando termine.
+    </div>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

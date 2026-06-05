@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.db import transaction
 from django.db.models import Sum, Count, Q
 
@@ -81,26 +83,87 @@ class ScoringService:
             return list(resultados)
 
     def calcular_puntos_fecha(self, quiniela_id: int, fecha_id: int) -> dict:
-        """Calcula puntos para TODOS los eventos de una fecha en batch.
-        Retorna {'ok': N, 'sin_resultado': [ids], 'total_pronósticos': N}."""
-        eventos = (
-            EventoPartido.objects
-            .filter(partido__fecha_id=fecha_id, quiniela_id=quiniela_id)
-            .exclude(estado="cancelado")
-            .select_related("tipo_evento")
-        )
+        """Calcula puntos para TODOS los eventos de una fecha en exactamente 4 queries.
+        Retorna {'ok': N, 'sin_resultado': [ids]}."""
+        with transaction.atomic():
+            # Query 1: todos los eventos de la fecha
+            eventos = list(
+                EventoPartido.objects
+                .filter(partido__fecha_id=fecha_id, quiniela_id=quiniela_id)
+                .exclude(estado="cancelado")
+                .select_related("tipo_evento")
+            )
 
-        ok = 0
-        sin_resultado = []
+            eventos_con_resultado = [e for e in eventos if e.resultado]
+            sin_resultado = [e.id for e in eventos if not e.resultado]
 
-        for evento in eventos:
-            if not evento.resultado:
-                sin_resultado.append(evento.id)
-                continue
-            self.calcular_puntos_evento(evento.id)
-            ok += 1
+            if not eventos_con_resultado:
+                return {"ok": 0, "sin_resultado": sin_resultado}
 
-        return {"ok": ok, "sin_resultado": sin_resultado}
+            evento_ids = [e.id for e in eventos_con_resultado]
+            tipo_ids = {e.tipo_evento_id for e in eventos_con_resultado}
+
+            # Query 2: todos los pronósticos de todos los eventos en una sola query
+            pronosticos = list(
+                PronosticoEvento.objects
+                .filter(evento_partido_id__in=evento_ids)
+                .values("usuario_id", "evento_partido_id", "valor")
+            )
+
+            pronosticos_por_evento: dict[int, list] = defaultdict(list)
+            for p in pronosticos:
+                pronosticos_por_evento[p["evento_partido_id"]].append(p)
+
+            # Query 3: todas las reglas de todos los tipos involucrados
+            reglas_qs = ReglaPuntuacion.objects.filter(
+                tipo_evento_id__in=tipo_ids,
+                quiniela_id__in=[quiniela_id, None],
+            )
+            reglas_globales: dict[tuple, int] = {}
+            reglas_especificas: dict[tuple, int] = {}
+            for r in reglas_qs:
+                key = (r.tipo_evento_id, r.codigo_acierto)
+                if r.quiniela_id is None:
+                    reglas_globales[key] = r.puntos
+                else:
+                    reglas_especificas[key] = r.puntos
+            reglas = {**reglas_globales, **reglas_especificas}
+
+            # Evaluación en memoria — sin queries adicionales
+            puntuaciones = []
+            for evento in eventos_con_resultado:
+                for pron in pronosticos_por_evento[evento.id]:
+                    codigo_acierto = self._evaluar(
+                        evento.tipo_evento.codigo,
+                        pron["valor"],
+                        evento.resultado,
+                    )
+                    puntos = reglas.get((evento.tipo_evento_id, codigo_acierto), 0)
+                    puntuaciones.append(PuntuacionEvento(
+                        usuario_id=pron["usuario_id"],
+                        evento_partido_id=evento.id,
+                        quiniela_id=quiniela_id,
+                        valor_pronosticado=pron["valor"],
+                        valor_resultado=evento.resultado,
+                        codigo_acierto=codigo_acierto,
+                        puntos=puntos,
+                    ))
+
+            # Query 4a: bulk_create de todos los PuntuacionEvento
+            PuntuacionEvento.objects.bulk_create(
+                puntuaciones,
+                update_conflicts=True,
+                unique_fields=["usuario_id", "evento_partido_id"],
+                update_fields=[
+                    "valor_pronosticado", "valor_resultado",
+                    "codigo_acierto", "puntos", "calculado_en",
+                ],
+            )
+
+            # Query 4b: UPDATE de estado en un solo statement
+            EventoPartido.objects.filter(id__in=evento_ids).update(estado="puntuado")
+
+            return {"ok": len(eventos_con_resultado), "sin_resultado": sin_resultado}
 
     def _evaluar(self, codigo_tipo: str, valor_pronosticado: str, valor_resultado: str) -> str:
         if codigo_tipo == "SCORE":
