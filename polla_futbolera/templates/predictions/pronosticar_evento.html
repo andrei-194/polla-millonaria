@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ evento.tipo_evento.nombre }} — Toque{% endblock %}
 {% block page_title %}{{ evento.tipo_evento.nombre }}{% endblock %}
@@ -16,7 +17,7 @@
 <div class="predict-match-hero">
   <div class="predict-team">
     {% if evento.partido.home_team.logo_url %}
-    <img src="{{ evento.partido.home_team.logo_url }}" alt="{{ evento.partido.home_team.name }}"
+    <img src="{% static evento.partido.home_team.logo_url %}" alt="{{ evento.partido.home_team.name }}"
          class="team-crest team-crest--lg">
     {% else %}
     <div class="team-crest team-crest--lg team-crest--fallback">{{ evento.partido.home_team.name|slice:":3"|upper }}</div>
@@ -36,7 +37,7 @@
 
   <div class="predict-team">
     {% if evento.partido.away_team.logo_url %}
-    <img src="{{ evento.partido.away_team.logo_url }}" alt="{{ evento.partido.away_team.name }}"
+    <img src="{% static evento.partido.away_team.logo_url %}" alt="{{ evento.partido.away_team.name }}"
          class="team-crest team-crest--lg">
     {% else %}
     <div class="team-crest team-crest--lg team-crest--fallback">{{ evento.partido.away_team.name|slice:":3"|upper }}</div>
@@ -56,7 +57,7 @@
   <!-- Marcador: inputs con escudos -->
   <div class="predict-score-row">
     {% if evento.partido.home_team.logo_url %}
-    <img src="{{ evento.partido.home_team.logo_url }}" alt="{{ evento.partido.home_team.name }}"
+    <img src="{% static evento.partido.home_team.logo_url %}" alt="{{ evento.partido.home_team.name }}"
          class="team-crest team-crest--sm">
     {% else %}
     <div class="team-crest team-crest--sm team-crest--fallback">{{ evento.partido.home_team.name|slice:":3"|upper }}</div>
@@ -69,7 +70,7 @@
            class="predict-score-input" value="{{ score_away|default:'' }}" required>
 
     {% if evento.partido.away_team.logo_url %}
-    <img src="{{ evento.partido.away_team.logo_url }}" alt="{{ evento.partido.away_team.name }}"
+    <img src="{% static evento.partido.away_team.logo_url %}" alt="{{ evento.partido.away_team.name }}"
          class="team-crest team-crest--sm">
     {% else %}
     <div class="team-crest team-crest--sm team-crest--fallback">{{ evento.partido.away_team.name|slice:":3"|upper }}</div>
@@ -90,7 +91,7 @@
         {% if evento.tipo_evento.codigo == 'WINNER' %}
           {% if choice == 'H' %}
             {% if evento.partido.home_team.logo_url %}
-            <img src="{{ evento.partido.home_team.logo_url }}" alt="{{ evento.partido.home_team.name }}" class="team-crest team-crest--sm">
+            <img src="{% static evento.partido.home_team.logo_url %}" alt="{{ evento.partido.home_team.name }}" class="team-crest team-crest--sm">
             {% else %}
             <div class="team-crest team-crest--sm team-crest--fallback">{{ evento.partido.home_team.name|slice:":3"|upper }}</div>
             {% endif %}
@@ -98,7 +99,7 @@
             <i class="bi bi-dash-circle" style="font-size:26px;color:var(--text-secondary);"></i>
           {% elif choice == 'A' %}
             {% if evento.partido.away_team.logo_url %}
-            <img src="{{ evento.partido.away_team.logo_url }}" alt="{{ evento.partido.away_team.name }}" class="team-crest team-crest--sm">
+            <img src="{% static evento.partido.away_team.logo_url %}" alt="{{ evento.partido.away_team.name }}" class="team-crest team-crest--sm">
             {% else %}
             <div class="team-crest team-crest--sm team-crest--fallback">{{ evento.partido.away_team.name|slice:":3"|upper }}</div>
             {% endif %}
