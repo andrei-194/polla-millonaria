@@ -48,7 +48,7 @@ EQUIPOS = [
     ("ESP", "España"),
     ("CPV", "Cabo Verde"),
     ("KSA", "Arabia Saudita"),
-    ("URU", "Uruguay"),
+    ("URY", "Uruguay"),
     # Grupo I
     ("FRA", "Francia"),
     ("SEN", "Senegal"),
@@ -106,7 +106,7 @@ PARTIDOS = [
     ("BEL", "EGY",  "2026-06-15 16:00", "GROUP_G", 1),
     ("ESP", "CPV",  "2026-06-15 16:00", "GROUP_H", 1),
     ("IRN", "NZL",  "2026-06-15 23:00", "GROUP_G", 1),
-    ("KSA", "URU",  "2026-06-15 23:00", "GROUP_H", 1),
+    ("KSA", "URY",  "2026-06-15 23:00", "GROUP_H", 1),
     # Jun 16
     ("FRA", "SEN",  "2026-06-16 20:00", "GROUP_I", 1),
     ("IRQ", "NOR",  "2026-06-16 23:00", "GROUP_I", 1),
@@ -138,7 +138,7 @@ PARTIDOS = [
     ("BEL", "IRN",  "2026-06-21 16:00", "GROUP_G", 2),
     ("ESP", "KSA",  "2026-06-21 16:00", "GROUP_H", 2),
     ("NZL", "EGY",  "2026-06-21 23:00", "GROUP_G", 2),
-    ("URU", "CPV",  "2026-06-21 23:00", "GROUP_H", 2),
+    ("URY", "CPV",  "2026-06-21 23:00", "GROUP_H", 2),
     # Jun 22
     ("ARG", "AUT",  "2026-06-22 16:00", "GROUP_J", 2),
     ("FRA", "IRQ",  "2026-06-22 22:00", "GROUP_I", 2),
@@ -169,7 +169,7 @@ PARTIDOS = [
     # Jun 26 — Grupos G, H, I (simultáneos por grupo)
     ("SEN", "IRQ",  "2026-06-26 20:00", "GROUP_I", 3),
     ("NOR", "FRA",  "2026-06-26 20:00", "GROUP_I", 3),
-    ("URU", "ESP",  "2026-06-26 22:00", "GROUP_H", 3),
+    ("URY", "ESP",  "2026-06-26 22:00", "GROUP_H", 3),
     ("CPV", "KSA",  "2026-06-26 23:00", "GROUP_H", 3),
     ("NZL", "BEL",  "2026-06-27 00:00", "GROUP_G", 3),
     ("EGY", "IRN",  "2026-06-27 00:00", "GROUP_G", 3),

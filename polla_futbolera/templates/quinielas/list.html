@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Toque — Retos de fútbol con amigos{% endblock %}
 {% block page_title %}{% if user.is_authenticated %}Inicio{% else %}Toque{% endif %}{% endblock %}
@@ -196,7 +197,7 @@
   <div class="matchday-item">
     <div class="matchday-item__team">
       {% if match.home_team.logo_url %}
-      <img src="{{ match.home_team.logo_url }}" alt="{{ match.home_team.name }}" class="team-crest team-crest--sm">
+      <img src="{% static match.home_team.logo_url %}" alt="{{ match.home_team.name }}" class="team-crest team-crest--sm">
       {% else %}
       <div class="team-crest team-crest--sm team-crest--fallback">{{ match.home_team.name|slice:":3"|upper }}</div>
       {% endif %}
@@ -211,7 +212,7 @@
     <div class="matchday-item__team matchday-item__team--away">
       <span class="matchday-item__name">{{ match.away_team.name }}</span>
       {% if match.away_team.logo_url %}
-      <img src="{{ match.away_team.logo_url }}" alt="{{ match.away_team.name }}" class="team-crest team-crest--sm">
+      <img src="{% static match.away_team.logo_url %}" alt="{{ match.away_team.name }}" class="team-crest team-crest--sm">
       {% else %}
       <div class="team-crest team-crest--sm team-crest--fallback">{{ match.away_team.name|slice:":3"|upper }}</div>
       {% endif %}
