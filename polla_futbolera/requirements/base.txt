@@ -6,3 +6,4 @@ httpx==0.*
 python-decouple==3.*
 Pillow==10.*
 qrcode==8.*
+django-q2>=1.7.0

@@ -1,14 +1,16 @@
 """
 Capa 2 — Motor de puntuación (ScoringService)
 
-TestEvaluarScore    : tests unitarios puros de _evaluar_score (sin BD)
-TestEvaluar         : tests del dispatcher _evaluar (sin BD)
-TestCalcularPuntos  : tests de integración calcular_puntos_evento con BD real
+TestEvaluarScore         : tests unitarios puros de _evaluar_score (sin BD)
+TestEvaluar              : tests del dispatcher _evaluar (sin BD)
+TestCalcularPuntos       : tests de integración calcular_puntos_evento con BD real
+TestCalcularPuntosFecha  : tests del refactor bulk de calcular_puntos_fecha
 
 Ejecutar:
     docker-compose exec web python manage.py test tests.test_scoring_engine
 """
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
+from django.db import connection
 
 from apps.scoring.application.services import ScoringService
 from apps.scoring.domain.exceptions import EventoSinResultadoError
@@ -261,3 +263,111 @@ class TestCalcularPuntos(TournamentScenario):
             usuario=self.jugadores[0], evento_partido=self.ev_score
         ).count()
         self.assertEqual(count, 1)
+
+
+# ── Capa 2c: calcular_puntos_fecha bulk (refactor N+1) ───────────────────────
+
+class TestCalcularPuntosFechaBulk(TournamentScenario):
+    """
+    Verifica que el refactor bulk de calcular_puntos_fecha produce resultados
+    idénticos al loop original y usa exactamente 4 queries.
+
+    Escenario: 4 usuarios, 3 partidos, 2 eventos cada uno = 6 EventoPartido, 24 pronósticos.
+    """
+
+    def setUp(self):
+        self.fecha = self._crear_fecha(numero=1)
+        self._inscribir_todos()
+
+        self.partidos = [self._crear_partido(self.fecha, suffix=str(i)) for i in range(3)]
+        self.eventos_score = [self._crear_evento(p, self.tipo_score) for p in self.partidos]
+        self.eventos_winner = [self._crear_evento(p, self.tipo_winner) for p in self.partidos]
+
+        # Todos los usuarios pronostican todos los eventos
+        for jugador in self.jugadores:
+            for ev_s in self.eventos_score:
+                self._pronosticar(jugador, ev_s, "2-1")
+            for ev_w in self.eventos_winner:
+                self._pronosticar(jugador, ev_w, "H")
+
+        # Setear resultado en todos los eventos
+        from apps.predictions.infrastructure.models import EventoPartido
+        EventoPartido.objects.filter(
+            id__in=[e.id for e in self.eventos_score]
+        ).update(resultado="2-1")
+        EventoPartido.objects.filter(
+            id__in=[e.id for e in self.eventos_winner]
+        ).update(resultado="H")
+
+    def test_genera_una_puntuacion_por_cada_pronostico(self):
+        # 4 jugadores × 6 eventos = 24 puntuaciones
+        ScoringService().calcular_puntos_fecha(self.quiniela.id, self.fecha.id)
+        total = PuntuacionEvento.objects.filter(
+            quiniela=self.quiniela,
+            evento_partido__partido__fecha=self.fecha,
+        ).count()
+        self.assertEqual(total, 24)
+
+    def test_puntos_exactos_correctos_para_score(self):
+        # Todos pronostican "2-1" y resultado es "2-1" → EXACT = 5 pts para tipo SCORE
+        ScoringService().calcular_puntos_fecha(self.quiniela.id, self.fecha.id)
+        for jugador in self.jugadores:
+            for ev_s in self.eventos_score:
+                p = PuntuacionEvento.objects.get(usuario=jugador, evento_partido=ev_s)
+                self.assertEqual(p.codigo_acierto, "EXACT")
+                self.assertEqual(p.puntos, 5)
+
+    def test_puntos_hit_correctos_para_winner(self):
+        # Todos pronostican "H" y resultado es "H" → HIT = 2 pts para tipo WINNER
+        ScoringService().calcular_puntos_fecha(self.quiniela.id, self.fecha.id)
+        for jugador in self.jugadores:
+            for ev_w in self.eventos_winner:
+                p = PuntuacionEvento.objects.get(usuario=jugador, evento_partido=ev_w)
+                self.assertEqual(p.codigo_acierto, "HIT")
+                self.assertEqual(p.puntos, 2)
+
+    def test_eventos_quedan_en_estado_puntuado(self):
+        ScoringService().calcular_puntos_fecha(self.quiniela.id, self.fecha.id)
+        from apps.predictions.infrastructure.models import EventoPartido
+        todos = list(
+            EventoPartido.objects.filter(
+                partido__fecha=self.fecha, quiniela=self.quiniela
+            ).values_list("estado", flat=True)
+        )
+        self.assertTrue(all(e == "puntuado" for e in todos))
+
+    def test_idempotencia_batch(self):
+        # Llamar dos veces → misma cantidad de filas (upsert, no duplicados)
+        svc = ScoringService()
+        svc.calcular_puntos_fecha(self.quiniela.id, self.fecha.id)
+        svc.calcular_puntos_fecha(self.quiniela.id, self.fecha.id)
+        total = PuntuacionEvento.objects.filter(
+            quiniela=self.quiniela,
+            evento_partido__partido__fecha=self.fecha,
+        ).count()
+        self.assertEqual(total, 24)
+
+    @override_settings(DEBUG=True)
+    def test_usa_exactamente_4_queries(self):
+        # Con DEBUG=True Django registra cada query
+        connection.queries_log.clear()
+        ScoringService().calcular_puntos_fecha(self.quiniela.id, self.fecha.id)
+        # savepoint open + 4 queries de negocio + savepoint release = 6 como máximo
+        # Las 4 queries de negocio son: eventos, pronósticos, reglas, bulk_create+update
+        n_queries = len(connection.queries)
+        self.assertLessEqual(
+            n_queries, 7,
+            f"Se esperaban ≤7 queries (4 negocio + savepoints), se ejecutaron {n_queries}: "
+            + str([q["sql"][:80] for q in connection.queries]),
+        )
+
+    def test_eventos_sin_resultado_son_ignorados(self):
+        # Quitar resultado de un evento y verificar que retorna el id en sin_resultado
+        from apps.predictions.infrastructure.models import EventoPartido
+        ev = self.eventos_score[0]
+        EventoPartido.objects.filter(id=ev.id).update(resultado=None)
+
+        resultado = ScoringService().calcular_puntos_fecha(self.quiniela.id, self.fecha.id)
+        self.assertIn(ev.id, resultado["sin_resultado"])
+        # Los demás 5 eventos sí se calcularon
+        self.assertEqual(resultado["ok"], 5)

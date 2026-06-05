@@ -1,7 +1,10 @@
+import json
+
 from django.contrib import admin
 from django.contrib import messages
+from django.urls import path
 
-from .models import ReglaPuntuacion, PuntuacionEvento, RankingFecha, RankingAcumulado
+from .models import ReglaPuntuacion, PuntuacionEvento, RankingFecha, RankingAcumulado, CalculoJob
 
 
 @admin.register(ReglaPuntuacion)
@@ -55,3 +58,41 @@ class RankingAcumuladoAdmin(admin.ModelAdmin):
         self.message_user(request, f"Ranking acumulado recalculado para {len(quinielas)} quiniela(s)")
 
     recalcular_ranking.short_description = "Recalcular ranking acumulado"
+
+
+@admin.register(CalculoJob)
+class CalculoJobAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "estado", "iniciado_por", "creado_en", "actualizado_en")
+    list_filter = ("estado",)
+    readonly_fields = ("estado", "creado_en", "actualizado_en", "resumen", "error_msg", "iniciado_por")
+    filter_horizontal = ("fechas",)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                "<int:job_id>/status/",
+                self.admin_site.admin_view(self.status_view),
+                name="scoring_calculojob_status",
+            )
+        ]
+        return custom + urls
+
+    def status_view(self, request, job_id):
+        from django.http import JsonResponse
+        job = CalculoJob.objects.get(id=job_id)
+        return JsonResponse({
+            "estado": job.estado,
+            "resumen": json.loads(job.resumen) if job.resumen else None,
+            "error": job.error_msg or None,
+        })
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        job = self.get_object(request, object_id)
+        if job and job.estado in ("PENDING", "RUNNING"):
+            extra_context["polling_job_id"] = job.id
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    class Media:
+        js = ("scoring/js/calculo_job_polling.js",)

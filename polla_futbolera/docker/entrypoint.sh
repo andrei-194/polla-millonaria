@@ -1,6 +1,13 @@
 #!/bin/sh
 set -e
 
+# RAILWAY_ROLE=worker arranca solo el qcluster (sin migrations/static)
+# RAILWAY_ROLE=web (default) hace el bootstrap completo + gunicorn
+if [ "${RAILWAY_ROLE}" = "worker" ]; then
+    echo "Starting django-q2 worker..."
+    exec python manage.py qcluster
+fi
+
 echo "Running migrations..."
 python manage.py migrate --noinput
 

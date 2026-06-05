@@ -105,3 +105,29 @@ class RankingAcumulado(models.Model):
         return f"#{self.posicion} {self.usuario.username} — {self.quiniela} ({self.puntos_total}pts)"
 
 
+class CalculoJob(models.Model):
+    ESTADO_CHOICES = [
+        ("PENDING", "Pendiente"),
+        ("RUNNING", "En proceso"),
+        ("DONE", "Completado"),
+        ("ERROR", "Error"),
+    ]
+
+    estado         = models.CharField(max_length=10, choices=ESTADO_CHOICES, default="PENDING")
+    fechas         = models.ManyToManyField("tournaments.Fecha", blank=True)
+    iniciado_por   = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    creado_en      = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+    resumen        = models.TextField(blank=True)
+    error_msg      = models.TextField(blank=True)
+
+    class Meta:
+        db_table = "scoring_calculo_job"
+        ordering = ["-creado_en"]
+        verbose_name = "Job de Cálculo"
+        verbose_name_plural = "Jobs de Cálculo"
+
+    def __str__(self):
+        return f"Job #{self.pk} [{self.estado}] — {self.creado_en:%Y-%m-%d %H:%M}"
