@@ -97,6 +97,8 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 PREDICTION_DEADLINE_MINUTES = config("PREDICTION_DEADLINE_MINUTES", default=60, cast=int)
 
+ADS_ENABLED = False
+
 FOOTBALL_API_KEY = config("FOOTBALL_API_KEY", default="")
 FOOTBALL_API_BASE_URL = config("FOOTBALL_API_BASE_URL", default="https://api.football-data.org/v4")
 
