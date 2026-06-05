@@ -12,6 +12,13 @@ ALLOWED_HOSTS = [h.strip() for h in _extra.split(",") if h.strip()]
 if _railway_public and _railway_public not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_railway_public)
 
+_csrf_origins = config("CSRF_TRUSTED_ORIGINS", default="")
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_origins.split(",") if o.strip()]
+if _railway_public:
+    _railway_origin = f"https://{_railway_public}"
+    if _railway_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_railway_origin)
+
 _database_url = config("DATABASE_URL")
 _parsed = _up.urlparse(_database_url)
 DATABASES = {
