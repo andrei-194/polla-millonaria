@@ -268,23 +268,20 @@ class Command(BaseCommand):
         self.stdout.write("═" * 62)
 
     def _explain_ranking_acumulado(self, quiniela):
-        from apps.scoring.infrastructure.models import PuntuacionEvento
-        from django.db.models import Sum, Count, Q
-
-        stats_qs = (
-            PuntuacionEvento.objects
-            .filter(quiniela_id=quiniela.id)
-            .values("usuario_id")
-            .annotate(
-                puntos=Sum("puntos"),
-                exactos_total=Count("id", filter=Q(codigo_acierto="EXACT")),
-            )
-        )
-        sql = str(stats_qs.query)
+        sql = """
+            SELECT "usuario_id",
+                   SUM("puntos") AS puntos,
+                   COUNT(CASE WHEN "codigo_acierto" = 'EXACT' THEN 1 END) AS exactos_total,
+                   COUNT(DISTINCT "evento_partido_id") AS eventos
+            FROM   scoring_puntuacion_evento
+            WHERE  "quiniela_id" = %s
+            GROUP  BY "usuario_id"
+            ORDER  BY puntos DESC
+        """
         self.stdout.write("")
         self.stdout.write("  EXPLAIN ANALYZE — recalcular_ranking_acumulado:")
         with connection.cursor() as cursor:
-            cursor.execute(f"EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) {sql}")
+            cursor.execute(f"EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) {sql}", [quiniela.id])
             for row in cursor.fetchall():
                 self.stdout.write(f"    {row[0]}")
 
