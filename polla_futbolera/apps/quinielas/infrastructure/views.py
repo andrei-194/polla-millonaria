@@ -1,9 +1,12 @@
+from datetime import timedelta
+
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
+from django.utils import timezone
 
 from ..application.services import QuinielaService
 from ..application.dtos import InscribirJugadorDTO
@@ -12,17 +15,103 @@ from .models import Quiniela, Inscripcion
 from .forms import InscribirJugadorForm
 from .permissions import jugador_required, moderador_required
 from apps.scoring.infrastructure.models import RankingAcumulado
-from apps.tournaments.infrastructure.models import Fecha
+from apps.tournaments.infrastructure.models import Fecha, Match
 
 User = get_user_model()
 
 
 def quiniela_list(request):
-    quinielas = Quiniela.objects.filter(status="activa").select_related("tournament")
+    quinielas_publicas = Quiniela.objects.filter(status="activa").select_related("tournament")
     total_jugadores = User.objects.filter(groups__name="Jugador").count()
+
+    mis_quinielas = []
+    proximos_partidos = []
+    mis_total_pts = 0
+
+    if request.user.is_authenticated:
+        from apps.predictions.infrastructure.models import EventoPartido
+
+        now = timezone.now()
+
+        inscripciones = (
+            Inscripcion.objects
+            .filter(jugador=request.user, activa=True)
+            .select_related("quiniela__tournament")
+            .order_by("quiniela__name")
+        )
+
+        quiniela_ids = [i.quiniela_id for i in inscripciones]
+
+        rankings_map = {
+            r.quiniela_id: r
+            for r in RankingAcumulado.objects.filter(
+                quiniela_id__in=quiniela_ids, usuario=request.user
+            )
+        }
+
+        mis_total_pts = sum(r.puntos_total for r in rankings_map.values())
+
+        for insc in inscripciones:
+            q = insc.quiniela
+            ranking = rankings_map.get(q.id)
+
+            eventos_pendientes = (
+                EventoPartido.objects
+                .filter(
+                    quiniela=q,
+                    estado='abierto',
+                    plazo_cierre__gt=now,
+                    partido__status__in=('scheduled', 'postponed'),
+                )
+                .exclude(pronosticos__usuario=request.user)
+                .count()
+            )
+
+            proxima_fecha = (
+                Fecha.objects
+                .filter(
+                    torneo=q.tournament,
+                    partidos__eventos__quiniela=q,
+                    partidos__eventos__estado='abierto',
+                )
+                .order_by('numero')
+                .first()
+            )
+
+            mis_quinielas.append({
+                "quiniela": q,
+                "ranking": ranking,
+                "eventos_pendientes": eventos_pendientes,
+                "proxima_fecha_nombre": proxima_fecha.nombre if proxima_fecha else None,
+            })
+
+        if quiniela_ids:
+            tournament_ids = list(set(i.quiniela.tournament_id for i in inscripciones))
+            proximos_partidos = list(
+                Match.objects
+                .filter(
+                    tournament_id__in=tournament_ids,
+                    status='scheduled',
+                    match_date__gte=now,
+                    match_date__lte=now + timedelta(hours=48),
+                )
+                .select_related('home_team', 'away_team')
+                .order_by('match_date')[:8]
+            )
+
+    _DIAS = ['lunes','martes','miércoles','jueves','viernes','sábado','domingo']
+    _MESES = ['enero','febrero','marzo','abril','mayo','junio',
+              'julio','agosto','septiembre','octubre','noviembre','diciembre']
+    _now = timezone.localtime(timezone.now())
+    today_str = f"{_DIAS[_now.weekday()]} {_now.day} de {_MESES[_now.month - 1]}"
+
     return render(request, "quinielas/list.html", {
-        "quinielas": quinielas,
+        "quinielas": quinielas_publicas,
         "total_jugadores": total_jugadores,
+        "mis_quinielas": mis_quinielas,
+        "proximos_partidos": proximos_partidos,
+        "mis_total_pts": mis_total_pts,
+        "today": today_str,
     })
 
 

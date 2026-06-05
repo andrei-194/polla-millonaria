@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 
 {% block title %}Toque — Retos de fútbol con amigos{% endblock %}
-{% block page_title %}Retos{% endblock %}
+{% block page_title %}{% if user.is_authenticated %}Inicio{% else %}Toque{% endif %}{% endblock %}
 {% block nav_quinielas %}active{% endblock %}
 
 {% block content %}
+
 {% if not user.is_authenticated %}
 
 <div class="guest-cta">
@@ -46,28 +47,171 @@
   <i class="bi bi-circle-fill" style="font-size:7px;color:var(--green);vertical-align:middle;margin-right:4px;filter:drop-shadow(0 0 4px var(--green));animation:pulse 1.6s ease-in-out infinite;"></i>
   En juego ahora
 </div>
-{% endif %}
-
-{% endif %}
-
 {% for quiniela in quinielas %}
 <a href="{% url 'quinielas:detail' slug=quiniela.slug %}" class="group-card">
-  <div class="group-card__icon">
-    <i class="bi bi-trophy-fill"></i>
-  </div>
+  <div class="group-card__icon"><i class="bi bi-trophy-fill"></i></div>
   <div class="group-card__content">
     <p class="group-card__name">{{ quiniela.name }}</p>
-    <span class="group-card__meta">
-      {{ quiniela.tournament.name }} · {{ quiniela.tournament.season }}
-    </span>
+    <span class="group-card__meta">{{ quiniela.tournament.name }} · {{ quiniela.tournament.season }}</span>
   </div>
   <i class="bi bi-chevron-right group-card__chevron"></i>
 </a>
-{% empty %}
-<div class="empty-state">
-  <i class="bi bi-trophy empty-state__icon"></i>
-  <h2 class="empty-state__title">Sin retos activos</h2>
-  <p class="empty-state__subtitle">Pronto habrá retos disponibles. Volvé más tarde.</p>
+{% endfor %}
+{% endif %}
+
+{% else %}
+
+<!-- ── Dashboard personalizado del jugador ── -->
+
+<!-- Hero de bienvenida -->
+<div class="player-hero">
+  <div class="player-hero__greeting">
+    <span class="player-hero__hola">Hola, {{ user.username }}</span>
+    <span class="player-hero__date">{{ today }}</span>
+  </div>
+  {% if mis_quinielas %}
+  <div class="player-hero__stats">
+    <div class="stat-pill">
+      <span class="stat-pill__val">{{ mis_total_pts }}</span>
+      <span class="stat-pill__label">pts totales</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-pill__val">{{ mis_quinielas|length }}</span>
+      <span class="stat-pill__label">reto{{ mis_quinielas|length|pluralize:"s" }}</span>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Mis Retos -->
+{% if mis_quinielas %}
+<div class="section-title">Mis Retos</div>
+
+{% for item in mis_quinielas %}
+<div class="reto-card {% if item.eventos_pendientes > 0 %}reto-card--pending{% endif %}">
+
+  <div class="reto-card__header">
+    <div class="reto-card__icon"><i class="bi bi-trophy-fill"></i></div>
+    <div class="reto-card__info">
+      <span class="reto-card__name">{{ item.quiniela.name }}</span>
+      <span class="reto-card__tournament">{{ item.quiniela.tournament.name }} · {{ item.quiniela.tournament.season }}</span>
+    </div>
+    {% if item.eventos_pendientes > 0 %}
+    <span class="reto-card__badge reto-card__badge--alert">
+      {{ item.eventos_pendientes }} pendiente{{ item.eventos_pendientes|pluralize:"s" }}
+    </span>
+    {% endif %}
+  </div>
+
+  {% if item.ranking %}
+  <div class="reto-card__stats">
+    <div class="reto-stat">
+      <span class="reto-stat__val">#{{ item.ranking.posicion }}</span>
+      <span class="reto-stat__label">posición</span>
+    </div>
+    <span class="reto-stat__sep">·</span>
+    <div class="reto-stat">
+      <span class="reto-stat__val">{{ item.ranking.puntos_total }}</span>
+      <span class="reto-stat__label">puntos</span>
+    </div>
+    <span class="reto-stat__sep">·</span>
+    <div class="reto-stat">
+      <span class="reto-stat__val">{{ item.ranking.exactos_total }}</span>
+      <span class="reto-stat__label">exactos</span>
+    </div>
+  </div>
+  {% else %}
+  <div class="reto-card__no-ranking">
+    <i class="bi bi-hourglass-split"></i> Sin puntuación aún — ¡hacé tu primera jugada!
+  </div>
+  {% endif %}
+
+  <div class="reto-card__context">
+    {% if item.proxima_fecha_nombre %}
+    <i class="bi bi-calendar3"></i> {{ item.proxima_fecha_nombre }}
+    {% if item.eventos_pendientes > 0 %}
+    · <span style="color:var(--warning);">{{ item.eventos_pendientes }} jugada{{ item.eventos_pendientes|pluralize:"s" }} abierta{{ item.eventos_pendientes|pluralize:"s" }}</span>
+    {% else %}
+    · <span style="color:var(--success);">Al día ✓</span>
+    {% endif %}
+    {% elif item.eventos_pendientes > 0 %}
+    <span style="color:var(--warning);"><i class="bi bi-exclamation-circle"></i> {{ item.eventos_pendientes }} jugada{{ item.eventos_pendientes|pluralize:"s" }} abierta{{ item.eventos_pendientes|pluralize:"s" }}</span>
+    {% endif %}
+  </div>
+
+  <div class="reto-card__actions">
+    <a href="{% url 'quinielas:fechas_list' slug=item.quiniela.slug %}"
+       class="btn {% if item.eventos_pendientes > 0 %}btn-primary{% else %}btn-secondary{% endif %} btn-sm btn-inline">
+      {% if item.eventos_pendientes > 0 %}
+      <i class="bi bi-pencil-fill"></i> Jugar ahora
+      {% else %}
+      <i class="bi bi-calendar3"></i> Ver jornadas
+      {% endif %}
+    </a>
+    <a href="{% url 'quinielas:leaderboard' slug=item.quiniela.slug %}"
+       class="btn btn-ghost btn-sm btn-inline">
+      <i class="bi bi-bar-chart-fill"></i> Ranking
+    </a>
+  </div>
+
 </div>
 {% endfor %}
+
+{% else %}
+<!-- Sin retos inscritos -->
+<div class="empty-retos">
+  <span class="empty-retos__icon"><i class="bi bi-shield"></i></span>
+  <p class="empty-retos__title">Todavía no estás en ningún reto</p>
+  <p class="empty-retos__sub">Pedile al moderador que te una a un reto para empezar a competir.</p>
+</div>
+
+{% if quinielas %}
+<div class="section-title">Retos disponibles</div>
+{% for quiniela in quinielas %}
+<a href="{% url 'quinielas:detail' slug=quiniela.slug %}" class="group-card">
+  <div class="group-card__icon"><i class="bi bi-trophy-fill"></i></div>
+  <div class="group-card__content">
+    <p class="group-card__name">{{ quiniela.name }}</p>
+    <span class="group-card__meta">{{ quiniela.tournament.name }} · {{ quiniela.tournament.season }}</span>
+  </div>
+  <i class="bi bi-chevron-right group-card__chevron"></i>
+</a>
+{% endfor %}
+{% endif %}
+{% endif %}
+
+<!-- Próximos partidos -->
+{% if proximos_partidos %}
+<div class="section-title" style="margin-top: var(--s6);">Próximos partidos</div>
+<div class="matchday-strip">
+  {% for match in proximos_partidos %}
+  <div class="matchday-item">
+    <div class="matchday-item__team">
+      {% if match.home_team.logo_url %}
+      <img src="{{ match.home_team.logo_url }}" alt="{{ match.home_team.name }}" class="team-crest team-crest--sm">
+      {% else %}
+      <div class="team-crest team-crest--sm team-crest--fallback">{{ match.home_team.name|slice:":3"|upper }}</div>
+      {% endif %}
+      <span class="matchday-item__name">{{ match.home_team.name }}</span>
+    </div>
+
+    <div class="matchday-item__center">
+      <span class="matchday-item__vs">VS</span>
+      <span class="matchday-item__time">{{ match.match_date|date:"d/m H:i" }}</span>
+    </div>
+
+    <div class="matchday-item__team matchday-item__team--away">
+      <span class="matchday-item__name">{{ match.away_team.name }}</span>
+      {% if match.away_team.logo_url %}
+      <img src="{{ match.away_team.logo_url }}" alt="{{ match.away_team.name }}" class="team-crest team-crest--sm">
+      {% else %}
+      <div class="team-crest team-crest--sm team-crest--fallback">{{ match.away_team.name|slice:":3"|upper }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endif %}
 {% endblock %}

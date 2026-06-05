@@ -20,53 +20,144 @@
 
 {% for item in partidos_con_eventos %}
 {% with partido=item.partido %}
-<div class="card mb-4" style="margin-bottom: var(--s4);">
-  <div class="card__body">
+<div class="partido-card">
 
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--s3);margin-bottom:var(--s3);">
-      <span style="flex:1;text-align:right;font-weight:var(--fw-semibold);">{{ partido.home_team }}</span>
-      <div style="text-align:center;min-width:64px;">
-        {% if partido.home_score is not None %}
-        <span style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:var(--fw-black);">
-          {{ partido.home_score }} - {{ partido.away_score }}
-        </span>
-        {% else %}
-        <span class="text-xs text-muted">{{ partido.match_date|date:"d M H:i" }}</span>
-        {% endif %}
-      </div>
-      <span style="flex:1;text-align:left;font-weight:var(--fw-semibold);">{{ partido.away_team }}</span>
+  <!-- Header del partido con escudos -->
+  <div class="partido-card__header">
+    <div class="partido-team">
+      {% if partido.home_team.logo_url %}
+      <img src="{{ partido.home_team.logo_url }}" alt="{{ partido.home_team.name }}" class="team-crest team-crest--md">
+      {% else %}
+      <div class="team-crest team-crest--md team-crest--fallback">{{ partido.home_team.name|slice:":3"|upper }}</div>
+      {% endif %}
+      <span class="partido-team__name">{{ partido.home_team.name }}</span>
     </div>
 
-    {% for ev_item in item.eventos %}
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--s2) 0;border-top:1px solid var(--border-subtle);">
-      <div>
-        <span class="text-sm" style="font-weight:var(--fw-medium);">{{ ev_item.evento.tipo_evento.nombre }}</span>
-        {% if ev_item.mi_pronostico %}
-        <span class="badge badge--open" style="margin-left:var(--s2);">{{ ev_item.mi_pronostico }}</span>
-        {% endif %}
-      </div>
-      {% if ev_item.evento.esta_abierto %}
-        <a href="{% url 'quinielas:pronosticar_evento' slug=quiniela.slug evento_id=ev_item.evento.id %}"
-           class="btn btn-primary btn-sm">
-          {% if ev_item.mi_pronostico %}
-          <i class="bi bi-pencil"></i> Editar
-          {% else %}
-          <i class="bi bi-pencil-fill"></i> Jugar
-          {% endif %}
-        </a>
-      {% elif ev_item.evento.estado == 'puntuado' %}
-        <span class="text-xs text-muted">
-          <i class="bi bi-check-circle"></i> {{ ev_item.evento.resultado }}
+    <div class="partido-card__center">
+      {% if partido.home_score is not None %}
+        <span class="partido-score">
+          {{ partido.home_score }}<span class="partido-score__sep">-</span>{{ partido.away_score }}
         </span>
+        <span class="partido-card__status--done">Final</span>
+      {% elif partido.status == 'in_progress' %}
+        <span class="partido-score partido-score--live">EN VIVO</span>
       {% else %}
-        <span class="badge" style="background:var(--surface-2);color:var(--text-muted);">Cerrado</span>
+        <span class="partido-card__time">{{ partido.match_date|date:"d M" }}</span>
+        <span class="partido-card__hour">{{ partido.match_date|date:"H:i" }}</span>
       {% endif %}
     </div>
-    {% empty %}
-    <div class="text-xs text-muted" style="padding-top:var(--s2);">Sin eventos activos</div>
+
+    <div class="partido-team">
+      {% if partido.away_team.logo_url %}
+      <img src="{{ partido.away_team.logo_url }}" alt="{{ partido.away_team.name }}" class="team-crest team-crest--md">
+      {% else %}
+      <div class="team-crest team-crest--md team-crest--fallback">{{ partido.away_team.name|slice:":3"|upper }}</div>
+      {% endif %}
+      <span class="partido-team__name">{{ partido.away_team.name }}</span>
+    </div>
+  </div>
+
+  <!-- Eventos del partido -->
+  {% if item.eventos %}
+  <div class="partido-card__events">
+
+    {% for ev_item in item.eventos %}
+    {% with ev=ev_item.evento prono=ev_item.mi_pronostico punt=ev_item.mi_puntuacion %}
+
+    {% if ev.esta_abierto %}
+
+      {% if prono %}
+      <!-- ABIERTO CON PRONÓSTICO -->
+      <div class="ev-row ev-row--editando">
+        <div class="ev-row__left">
+          <span class="ev-row__name">{{ ev.tipo_evento.nombre }}</span>
+          <span class="ev-row__my-pick">
+            <i class="bi bi-pencil-fill" style="font-size:9px;"></i>
+            {% if ev.tipo_evento.codigo == 'WINNER' %}
+              {% if prono == 'H' %}{{ partido.home_team.name }}{% elif prono == 'D' %}Empate{% elif prono == 'A' %}{{ partido.away_team.name }}{% else %}{{ prono }}{% endif %}
+            {% else %}{{ prono }}{% endif %}
+          </span>
+        </div>
+        <a href="{% url 'quinielas:pronosticar_evento' slug=quiniela.slug evento_id=ev.id %}"
+           class="btn btn-ghost btn-sm btn-inline ev-row__btn">
+          <i class="bi bi-pencil"></i> Editar
+        </a>
+      </div>
+
+      {% else %}
+      <!-- ABIERTO SIN PRONÓSTICO -->
+      <div class="ev-row ev-row--abierto">
+        <div class="ev-row__left">
+          <span class="ev-row__name">{{ ev.tipo_evento.nombre }}</span>
+          <span class="ev-row__deadline">
+            <i class="bi bi-clock"></i> Cierra {{ ev.plazo_cierre|date:"d/m H:i" }}
+          </span>
+        </div>
+        <a href="{% url 'quinielas:pronosticar_evento' slug=quiniela.slug evento_id=ev.id %}"
+           class="btn btn-primary btn-sm btn-inline ev-row__btn">
+          <i class="bi bi-pencil-fill"></i> Jugar
+        </a>
+      </div>
+      {% endif %}
+
+    {% elif ev.estado == 'puntuado' %}
+    <!-- PUNTUADO -->
+    <div class="ev-row ev-row--puntuado">
+      <div class="ev-row__left">
+        <span class="ev-row__name">{{ ev.tipo_evento.nombre }}</span>
+        <div class="ev-row__result-detail">
+          <span class="text-xs">
+            Resultado: <strong>
+              {% if ev.tipo_evento.codigo == 'WINNER' %}
+                {% if ev.resultado == 'H' %}{{ partido.home_team.name }}{% elif ev.resultado == 'D' %}Empate{% elif ev.resultado == 'A' %}{{ partido.away_team.name }}{% else %}{{ ev.resultado }}{% endif %}
+              {% else %}{{ ev.resultado }}{% endif %}
+            </strong>
+          </span>
+          {% if prono %}
+          <span class="text-xs text-muted">Mi jugada: {{ prono }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="ev-row__right">
+        {% if punt %}
+          {% if punt.codigo_acierto == 'EXACT' %}
+          <span class="outcome-badge outcome-badge--exacto"><i class="bi bi-star-fill"></i> Exacto</span>
+          {% elif punt.codigo_acierto == 'MISS' %}
+          <span class="outcome-badge outcome-badge--fallo"><i class="bi bi-x-circle-fill"></i> Fallo</span>
+          {% else %}
+          <span class="outcome-badge outcome-badge--acierto"><i class="bi bi-check-circle-fill"></i> Acierto</span>
+          {% endif %}
+        {% elif prono %}
+        <span class="outcome-badge outcome-badge--sin-pts">Sin pts</span>
+        {% else %}
+        <span class="outcome-badge outcome-badge--no-jugaste">No jugaste</span>
+        {% endif %}
+      </div>
+    </div>
+
+    {% else %}
+    <!-- CERRADO -->
+    <div class="ev-row ev-row--cerrado">
+      <div class="ev-row__left">
+        <span class="ev-row__name">{{ ev.tipo_evento.nombre }}</span>
+        {% if prono %}
+        <span class="ev-row__my-pick">{{ prono }}</span>
+        {% endif %}
+      </div>
+      <span class="ev-row__closed-badge">Cerrado</span>
+    </div>
+    {% endif %}
+
+    {% endwith %}
     {% endfor %}
 
   </div>
+  {% else %}
+  <div style="padding: var(--s3) var(--s4); font-size: var(--text-xs); color: var(--text-muted);">
+    Sin eventos activos
+  </div>
+  {% endif %}
+
 </div>
 {% endwith %}
 {% empty %}
