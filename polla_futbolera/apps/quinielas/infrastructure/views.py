@@ -16,6 +16,7 @@ from .forms import InscribirJugadorForm
 from .permissions import jugador_required, moderador_required
 from apps.scoring.infrastructure.models import RankingAcumulado
 from apps.tournaments.infrastructure.models import Fecha, Match
+from apps.announcements.infrastructure.models import Anuncio
 
 User = get_user_model()
 
@@ -112,6 +113,7 @@ def quiniela_list(request):
         "proximos_partidos": proximos_partidos,
         "mis_total_pts": mis_total_pts,
         "today": today_str,
+        "anuncios": Anuncio.activos_ahora(),
     })
 
 

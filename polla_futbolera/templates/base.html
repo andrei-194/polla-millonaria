@@ -125,11 +125,11 @@
     </span>
     {% endif %}
 
-    <a href="{% url 'notifications:list' %}"
-       class="bottom-nav__item {% block nav_notifications %}{% endblock %}"
-       aria-label="Notificaciones">
-      <i class="bi bi-bell-fill" aria-hidden="true"></i>
-      <span>Alertas</span>
+    <a href="{% url 'announcements:como_jugar' %}"
+       class="bottom-nav__item {% block nav_como_jugar %}{% endblock %}"
+       aria-label="Cómo jugar">
+      <i class="bi bi-question-circle-fill" aria-hidden="true"></i>
+      <span>Reglas</span>
     </a>
 
     <a href="{% url 'accounts:profile' %}"

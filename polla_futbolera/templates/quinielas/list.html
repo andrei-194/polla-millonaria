@@ -7,6 +7,25 @@
 
 {% block content %}
 
+{% if anuncios %}
+<div class="anuncios-list">
+  {% for a in anuncios %}
+  <div class="anuncio-card">
+    {% if a.emoji %}<span class="anuncio-card__emoji">{{ a.emoji }}</span>{% endif %}
+    <div class="anuncio-card__body">
+      <strong class="anuncio-card__titulo">{{ a.titulo }}</strong>
+      <p class="anuncio-card__cuerpo">{{ a.cuerpo }}</p>
+      {% if a.cta_texto and a.cta_url %}
+      <a href="{{ a.cta_url }}" class="btn btn-primary btn-sm" style="margin-top:var(--s3);">
+        {{ a.cta_texto }}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
 {% if not user.is_authenticated %}
 
 <div class="guest-cta">

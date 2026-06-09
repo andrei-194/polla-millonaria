@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Cómo jugar — Toque{% endblock %}
+{% block page_title %}Cómo jugar{% endblock %}
+{% block nav_como_jugar %}active{% endblock %}
+
+{% block content %}
+
+<div class="rules-hero">
+  <div class="rules-hero__icon">⚽</div>
+  <p class="rules-hero__title">Jugá con tus amigos</p>
+  <p class="rules-hero__sub">Predecí resultados, acumulá puntos y llegá a lo más alto del ranking.</p>
+</div>
+
+<!-- Cómo participar -->
+<div class="section-title">Cómo participar</div>
+
+<div class="rules-steps">
+  <div class="rules-step">
+    <div class="rules-step__num">1</div>
+    <div class="rules-step__body">
+      <strong>Únete a un reto</strong>
+      <p>El moderador te agrega a un reto vinculado a un torneo. Recibirás acceso a todas las jornadas.</p>
+    </div>
+  </div>
+  <div class="rules-step">
+    <div class="rules-step__num">2</div>
+    <div class="rules-step__body">
+      <strong>Hacé tus jugadas</strong>
+      <p>Antes de cada partido elegí el resultado: victoria local, empate o victoria visitante.</p>
+    </div>
+  </div>
+  <div class="rules-step">
+    <div class="rules-step__num">3</div>
+    <div class="rules-step__body">
+      <strong>Seguí el marcador</strong>
+      <p>Los puntos se acreditan automáticamente cuando el partido termina. Mirá el ranking en tiempo real.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Sistema de puntos -->
+<div class="section-title">Sistema de puntos</div>
+
+<div class="rules-points">
+  <div class="rules-points__row rules-points__row--highlight">
+    <div class="rules-points__left">
+      <span class="rules-points__badge rules-points__badge--gold">✓✓</span>
+      <span class="rules-points__label">Resultado exacto</span>
+    </div>
+    <span class="rules-points__val">3 pts</span>
+  </div>
+  <p class="rules-points__desc">Acertás el resultado final Y el marcador exacto (ej: 2–1).</p>
+
+  <div class="rules-points__row">
+    <div class="rules-points__left">
+      <span class="rules-points__badge rules-points__badge--green">✓</span>
+      <span class="rules-points__label">Resultado correcto</span>
+    </div>
+    <span class="rules-points__val">1 pt</span>
+  </div>
+  <p class="rules-points__desc">Acertás quién gana o que es empate, pero no el marcador exacto.</p>
+
+  <div class="rules-points__row">
+    <div class="rules-points__left">
+      <span class="rules-points__badge rules-points__badge--red">✗</span>
+      <span class="rules-points__label">Resultado incorrecto</span>
+    </div>
+    <span class="rules-points__val">0 pts</span>
+  </div>
+  <p class="rules-points__desc">El partido terminó diferente a lo que predijiste.</p>
+</div>
+
+<!-- Tiempos de cierre -->
+<div class="section-title">Tiempos de cierre</div>
+
+<div class="rules-card">
+  <i class="bi bi-clock-fill rules-card__icon" style="color:var(--warning);"></i>
+  <div>
+    <strong>Las jugadas cierran antes del inicio del partido.</strong>
+    <p style="margin:var(--s1) 0 0; color:var(--text-muted); font-size:var(--text-sm);">
+      Una vez que el árbitro da inicio al partido ya no podés modificar ni agregar pronósticos para ese encuentro.
+    </p>
+  </div>
+</div>
+
+<!-- Cómo ganar -->
+<div class="section-title">Cómo ganar</div>
+
+<div class="rules-card">
+  <i class="bi bi-trophy-fill rules-card__icon" style="color:var(--gold, #f5c518);"></i>
+  <div>
+    <strong>El jugador con más puntos al final del torneo gana el reto.</strong>
+    <p style="margin:var(--s1) 0 0; color:var(--text-muted); font-size:var(--text-sm);">
+      En caso de empate en puntos, gana quien tenga más resultados exactos. Podés seguir tu posición en el ranking general y por jornada desde la sección <strong>Retos</strong>.
+    </p>
+  </div>
+</div>
+
+{% if not user.is_authenticated %}
+<div style="margin-top:var(--s8); text-align:center;">
+  <a href="{% url 'accounts:register' %}" class="btn btn-primary">
+    <i class="bi bi-person-plus-fill"></i> Crear cuenta gratis
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}

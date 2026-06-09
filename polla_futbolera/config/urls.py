@@ -12,6 +12,7 @@ urlpatterns = [
     path("quinielas/", include("apps.quinielas.infrastructure.urls")),
     path("torneos/", include("apps.tournaments.infrastructure.urls")),
     path("notificaciones/", include("apps.notifications.infrastructure.urls")),
+    path("como-jugar/", include("apps.announcements.infrastructure.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
