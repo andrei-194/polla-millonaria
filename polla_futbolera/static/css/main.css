@@ -2219,42 +2219,6 @@ textarea.form-input {
   max-width: 100vw;
 }
 
-/* ── Anuncios ────────────────────────────────────────────── */
-.anuncios-list { display: flex; flex-direction: column; gap: var(--s3); margin-bottom: var(--s4); }
-
-.anuncio-card {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--s3);
-  background: linear-gradient(135deg, rgba(var(--accent-rgb, 99,102,241), 0.12) 0%, rgba(var(--accent-rgb, 99,102,241), 0.04) 100%);
-  border: 1px solid rgba(var(--accent-rgb, 99,102,241), 0.25);
-  border-radius: var(--radius-lg);
-  padding: var(--s4);
-}
-
-.anuncio-card__emoji {
-  font-size: 2rem;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.anuncio-card__body { flex: 1; min-width: 0; }
-
-.anuncio-card__titulo {
-  display: block;
-  font-size: var(--text-md);
-  font-family: var(--font-display);
-  color: var(--text-primary);
-  margin-bottom: var(--s1);
-}
-
-.anuncio-card__cuerpo {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.5;
-}
-
 /* ── Cómo Jugar ──────────────────────────────────────────── */
 .rules-hero {
   text-align: center;
