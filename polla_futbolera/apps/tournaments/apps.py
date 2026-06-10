@@ -6,3 +6,7 @@ class TournamentsConfig(AppConfig):
     name = "apps.tournaments"
     label = "tournaments"
     verbose_name = "Torneos"
+
+    def ready(self):
+        from .signals import register_signals
+        register_signals()

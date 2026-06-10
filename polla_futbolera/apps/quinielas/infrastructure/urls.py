@@ -26,7 +26,9 @@ urlpatterns = [
 
     # Rankings
     path("<slug:slug>/leaderboard/", scoring_views.leaderboard_acumulado_view, name="leaderboard"),
+    path("<slug:slug>/leaderboard/json/", scoring_views.ranking_acumulado_json, name="leaderboard_json"),
     path("<slug:slug>/fechas/<int:numero>/ranking/", scoring_views.ranking_fecha_view, name="ranking_fecha"),
+    path("<slug:slug>/fechas/<int:numero>/ranking/json/", scoring_views.ranking_fecha_json, name="ranking_fecha_json"),
     path("<slug:slug>/mi-historial/", scoring_views.mi_historial_view, name="mi_historial"),
 
     # Fechas y eventos (predicciones v3)
