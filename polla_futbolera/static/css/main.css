@@ -2335,3 +2335,64 @@ textarea.form-input {
 
 .rules-card__icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
 .rules-card p { margin: 0; }
+
+/* ── Landing: Points Card ──────────────────────────────────── */
+.landing-points {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.landing-points__title {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--border);
+}
+
+.landing-points__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s3) var(--s4);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  gap: var(--s3);
+}
+
+.landing-points__row:last-child { border-bottom: none; }
+.landing-points__row--gold { color: var(--gold); }
+.landing-points__row--green { color: var(--green); }
+
+.landing-points__val {
+  font-family: var(--font-display);
+  font-weight: var(--fw-black);
+  font-size: var(--text-md);
+  white-space: nowrap;
+}
+
+.landing-points__val--muted { color: var(--text-muted); }
+
+/* ── Landing: Scroll fade-in ───────────────────────────────── */
+.landing-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.landing-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
