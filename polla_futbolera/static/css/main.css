@@ -2214,16 +2214,6 @@ textarea.form-input {
   text-transform: uppercase;
 }
 
-/* ── Ads ────────────────────────────────────────────────── */
-.ad-banner-wrapper {
-  display: flex;
-  justify-content: center;
-  overflow: hidden;
-  background: transparent;
-  padding: 4px 0;
-  max-width: 100vw;
-}
-
 /* ── Cómo Jugar ──────────────────────────────────────────── */
 .rules-hero {
   text-align: center;

@@ -60,8 +60,6 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="apikey")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@polla-futbolera.com")
 
-ADS_ENABLED = False
-
 import sentry_sdk
 _sentry_dsn = config("SENTRY_DSN", default="")
 if _sentry_dsn:
