@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Toque — Pronosticá. Competí. Ganá.{% endblock %}
+{% block title %}Toque — La competencia de pronósticos de fútbol{% endblock %}
 
 {% block full_page %}
 <div class="landing-screen">
@@ -11,11 +11,11 @@
     <span class="landing-brand__name">Toque</span>
   </div>
 
-  <!-- Hero -->
+  <!-- ① CURIOSIDAD — Hero -->
   <div class="landing-hero">
     <p class="landing-pulse" role="status">
       <span class="landing-pulse__dot" aria-hidden="true"></span>
-      Reto activo · parceros ya en la jugada
+      Reto activo · jornada en curso
     </p>
 
     <h1 class="landing-headline">
@@ -25,18 +25,18 @@
     </h1>
 
     <p class="landing-sub">
-      Predecí los resultados jornada a jornada, acumulá puntos y dejá a tus parces sin argumentos. <strong>Un solo pago de $10.000, toda la temporada.</strong>
+      La competencia de pronósticos donde el fútbol que sabés se convierte en puntos reales. Predecí jornada a jornada y demostrá quién conoce el fútbol de verdad. <strong>Una sola cuota: $10.000.</strong>
     </p>
 
     <a href="{% url 'accounts:register' %}" class="btn btn-primary landing-cta-primary">
-      <i class="bi bi-lightning-fill" aria-hidden="true"></i> Me le mido al reto
+      <i class="bi bi-lightning-fill" aria-hidden="true"></i> Quiero entrar al reto
     </a>
     <a href="{% url 'accounts:login' %}" class="landing-cta-secondary">
-      Ya tengo ficha →
+      Ya tengo cuenta →
     </a>
   </div>
 
-  <!-- Stats -->
+  <!-- ② INTERÉS — Social proof -->
   <div class="hero-landing__stats landing-reveal" role="region" aria-label="Estadísticas">
     <div class="hero-landing__stat">
       <span class="hero-landing__stat-num">1.2K+</span>
@@ -54,45 +54,45 @@
     </div>
   </div>
 
-  <!-- Un pago, todo el torneo -->
+  <!-- ③ COMPRENSIÓN — Valor del pago único -->
   <div class="landing-onepay landing-reveal" role="note">
     <i class="bi bi-shield-fill-check landing-onepay__icon" aria-hidden="true"></i>
     <div class="landing-onepay__text">
-      <strong>Un solo pago de $10.000</strong>
-      <span>Te da acceso a <em>todas</em> las jornadas y fases del torneo. Sin cobros extra, sin sorpresas.</span>
+      <strong>Una sola cuota de $10.000</strong>
+      <span>Te da acceso a <em>todas</em> las jornadas y fases del torneo. Sin cobros adicionales ni sorpresas.</span>
     </div>
   </div>
 
-  <!-- Cómo funciona (vista rápida) -->
-  <div class="landing-steps landing-reveal" role="list" aria-label="Resumen">
+  <!-- Pasos rápidos -->
+  <div class="landing-steps landing-reveal" role="list" aria-label="Cómo funciona">
     <div class="landing-step" role="listitem">
       <div class="landing-step__num">1</div>
-      <strong>Pagá la cuota</strong>
+      <strong>Registrate y pagá</strong>
     </div>
     <span class="landing-step-arrow" aria-hidden="true">›</span>
     <div class="landing-step" role="listitem">
       <div class="landing-step__num">2</div>
-      <strong>Predecí partido a partido</strong>
+      <strong>Predecí jornada a jornada</strong>
     </div>
     <span class="landing-step-arrow" aria-hidden="true">›</span>
     <div class="landing-step" role="listitem">
       <div class="landing-step__num">3</div>
-      <strong>Mandá en el ranking ⚡</strong>
+      <strong>Subí al ranking ⚡</strong>
     </div>
   </div>
 
-  <!-- En qué consiste (detalle) -->
-  <div class="landing-explainer landing-reveal" role="region" aria-label="En qué consiste el juego">
+  <!-- ④ COMPRENSIÓN PROFUNDA — Cómo funciona en detalle -->
+  <div class="landing-explainer landing-reveal" role="region" aria-label="Cómo funciona el juego">
     <div class="landing-explainer__header">
       <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
-      ¿En qué consiste?
+      ¿Cómo funciona?
     </div>
 
     <div class="landing-explainer__item">
       <span class="landing-explainer__icon">🗓️</span>
       <div class="landing-explainer__body">
         <strong>Jornada a jornada</strong>
-        <p>El torneo se divide en jornadas. Antes de que arranque cada fecha tenés una ventana para predecir el resultado de cada partido. Una vez que pita el árbitro, se cierra.</p>
+        <p>El torneo se juega por fechas. Antes de que arranque cada jornada tenés una ventana para predecir el resultado de cada partido. Cuando pita el árbitro, se cierra tu pronóstico.</p>
       </div>
     </div>
 
@@ -100,31 +100,31 @@
       <span class="landing-explainer__icon">🎯</span>
       <div class="landing-explainer__body">
         <strong>Predecís el marcador exacto</strong>
-        <p>No solo quién gana: elegís el resultado final del partido (ej: 2–1, 0–0). Cuanto más fino el ojo, más puntos acumulás en la tabla.</p>
+        <p>No es solo elegir quién gana: predecís el resultado final del partido (ej: 2–1, 0–0). Cuanto más preciso el pronóstico, más puntos sumás en la tabla.</p>
       </div>
     </div>
 
     <div class="landing-explainer__item landing-explainer__item--last">
       <span class="landing-explainer__icon">🏆</span>
       <div class="landing-explainer__body">
-        <strong>El que más sabe, gana</strong>
-        <p>Al final del torneo, el jugador con más puntos gana el reto. Si hay empate en puntos, desempata quien tenga más marcadores exactos. Nada de suerte: puro conocimiento.</p>
+        <strong>El que más sabe, termina arriba</strong>
+        <p>Al final del torneo, el jugador con más puntos gana el reto. En caso de empate, desempata quien tenga más marcadores exactos. Sin atajos, sin suerte — puro conocimiento.</p>
       </div>
     </div>
   </div>
 
-  <!-- Sistema de puntos -->
+  <!-- ⑤ DESEO — Sistema de puntos -->
   <div class="landing-points landing-reveal" role="region" aria-label="Sistema de puntos">
     <div class="landing-points__title">
       <i class="bi bi-star-fill" style="color:var(--gold)" aria-hidden="true"></i>
-      Pa' escalar hay que pegarla
+      Cómo se suman los puntos
     </div>
     <div class="landing-points__row landing-points__row--gold">
       <div class="landing-points__label">
         <span class="landing-points__badge landing-points__badge--gold">✓✓</span>
         <div>
           <span>Marcador exacto</span>
-          <small>Acertás resultado Y el marcador (ej: 2–1)</small>
+          <small>Acertás el resultado final y el marcador (ej: 2–1)</small>
         </div>
       </div>
       <span class="landing-points__val">3 pts</span>
@@ -134,7 +134,7 @@
         <span class="landing-points__badge landing-points__badge--green">✓</span>
         <div>
           <span>Resultado correcto</span>
-          <small>Acertás quién gana o el empate, pero no el marcador</small>
+          <small>Acertás quién gana o que es empate, pero no el marcador</small>
         </div>
       </div>
       <span class="landing-points__val">1 pt</span>
@@ -151,21 +151,21 @@
     </div>
     <div class="landing-points__footer">
       <i class="bi bi-info-circle" aria-hidden="true"></i>
-      Empate en puntos al final del torneo → gana quien tenga más marcadores exactos
+      Empate en puntos al final del torneo — gana quien tenga más marcadores exactos
     </div>
   </div>
 
-  <!-- CTA final -->
+  <!-- ⑥ ACCIÓN — CTA final -->
   <div class="guest-cta landing-reveal" role="complementary">
     <div class="guest-cta__orb" aria-hidden="true"></div>
-    <p class="guest-cta__headline">¿Se le mide<br><span style="color:var(--green)">o no se le mide?</span></p>
-    <p class="guest-cta__sub">Por menos de lo que vale un tinto en la esquina, entrás al reto, les dás palo a los parces y quedás como el que más sabe de fútbol.</p>
+    <p class="guest-cta__headline">¿Sabés<br><span style="color:var(--green)">de fútbol?</span></p>
+    <p class="guest-cta__sub">Demostralo. Por $10.000 entrás al reto, competís en todas las jornadas del torneo y tenés la chance real de cerrar la temporada en el primer lugar.</p>
     <div class="guest-cta__stats">
       <span class="guest-cta__stat-dot" aria-hidden="true"></span>
       $10.000 COP · ~$2.5 USD · Toda la temporada
     </div>
     <a href="{% url 'accounts:register' %}" class="btn btn-primary guest-cta__btn">
-      <i class="bi bi-lightning-fill" aria-hidden="true"></i> ¡Me le mido! — $10.000
+      <i class="bi bi-lightning-fill" aria-hidden="true"></i> Entrar al reto — $10.000
     </a>
   </div>
 
@@ -175,7 +175,7 @@
       <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Iniciar sesión
     </a>
     <a href="{% url 'accounts:register' %}" class="btn btn-primary">
-      <i class="bi bi-lightning-fill" aria-hidden="true"></i> ¡Me le mido!
+      <i class="bi bi-lightning-fill" aria-hidden="true"></i> Entrar al reto
     </a>
   </nav>
 </div>
