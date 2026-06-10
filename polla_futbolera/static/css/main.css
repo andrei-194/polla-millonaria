@@ -2694,3 +2694,60 @@ textarea.form-input {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ── Banner "Convertite en jugador" (usuarios sin rol) ─────── */
+.banner-join-player {
+  background: var(--bg-surface);
+  border: 1px solid rgba(0,230,118,0.35);
+  border-radius: var(--r-lg);
+  padding: var(--s4);
+  margin-bottom: var(--s4);
+}
+
+.banner-join-player__header {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s2);
+}
+
+.banner-join-player__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  background: rgba(0,230,118,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.banner-join-player__title {
+  font-weight: var(--fw-bold);
+  font-size: var(--text-base);
+  color: var(--green);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.banner-join-player__desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--s4);
+  line-height: 1.5;
+}
+
+.btn-whatsapp {
+  background: #25d366;
+  color: #fff;
+  border: none;
+  font-weight: var(--fw-semibold);
+}
+
+.btn-whatsapp:hover,
+.btn-whatsapp:focus {
+  background: #1ebe5d;
+  color: #fff;
+}
