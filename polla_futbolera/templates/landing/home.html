@@ -25,7 +25,7 @@
     </h1>
 
     <p class="landing-sub">
-      La polla de fútbol donde saber sí paga. Predecí, acumulá puntos y dejá a tus parces sin argumentos. <strong>Entrada: $10.000.</strong>
+      Predecí los resultados jornada a jornada, acumulá puntos y dejá a tus parces sin argumentos. <strong>Un solo pago de $10.000, toda la temporada.</strong>
     </p>
 
     <a href="{% url 'accounts:register' %}" class="btn btn-primary landing-cta-primary">
@@ -54,8 +54,17 @@
     </div>
   </div>
 
-  <!-- Cómo funciona -->
-  <div class="landing-steps landing-reveal" role="list" aria-label="Cómo funciona">
+  <!-- Un pago, todo el torneo -->
+  <div class="landing-onepay landing-reveal" role="note">
+    <i class="bi bi-shield-fill-check landing-onepay__icon" aria-hidden="true"></i>
+    <div class="landing-onepay__text">
+      <strong>Un solo pago de $10.000</strong>
+      <span>Te da acceso a <em>todas</em> las jornadas y fases del torneo. Sin cobros extra, sin sorpresas.</span>
+    </div>
+  </div>
+
+  <!-- Cómo funciona (vista rápida) -->
+  <div class="landing-steps landing-reveal" role="list" aria-label="Resumen">
     <div class="landing-step" role="listitem">
       <div class="landing-step__num">1</div>
       <strong>Pagá la cuota</strong>
@@ -72,6 +81,38 @@
     </div>
   </div>
 
+  <!-- En qué consiste (detalle) -->
+  <div class="landing-explainer landing-reveal" role="region" aria-label="En qué consiste el juego">
+    <div class="landing-explainer__header">
+      <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+      ¿En qué consiste?
+    </div>
+
+    <div class="landing-explainer__item">
+      <span class="landing-explainer__icon">🗓️</span>
+      <div class="landing-explainer__body">
+        <strong>Jornada a jornada</strong>
+        <p>El torneo se divide en jornadas. Antes de que arranque cada fecha tenés una ventana para predecir el resultado de cada partido. Una vez que pita el árbitro, se cierra.</p>
+      </div>
+    </div>
+
+    <div class="landing-explainer__item">
+      <span class="landing-explainer__icon">🎯</span>
+      <div class="landing-explainer__body">
+        <strong>Predecís el marcador exacto</strong>
+        <p>No solo quién gana: elegís el resultado final del partido (ej: 2–1, 0–0). Cuanto más fino el ojo, más puntos acumulás en la tabla.</p>
+      </div>
+    </div>
+
+    <div class="landing-explainer__item landing-explainer__item--last">
+      <span class="landing-explainer__icon">🏆</span>
+      <div class="landing-explainer__body">
+        <strong>El que más sabe, gana</strong>
+        <p>Al final del torneo, el jugador con más puntos gana el reto. Si hay empate en puntos, desempata quien tenga más marcadores exactos. Nada de suerte: puro conocimiento.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Sistema de puntos -->
   <div class="landing-points landing-reveal" role="region" aria-label="Sistema de puntos">
     <div class="landing-points__title">
@@ -79,16 +120,38 @@
       Pa' escalar hay que pegarla
     </div>
     <div class="landing-points__row landing-points__row--gold">
-      <span>⚽ Marcador exacto</span>
+      <div class="landing-points__label">
+        <span class="landing-points__badge landing-points__badge--gold">✓✓</span>
+        <div>
+          <span>Marcador exacto</span>
+          <small>Acertás resultado Y el marcador (ej: 2–1)</small>
+        </div>
+      </div>
       <span class="landing-points__val">3 pts</span>
     </div>
     <div class="landing-points__row landing-points__row--green">
-      <span>✓ Resultado correcto</span>
+      <div class="landing-points__label">
+        <span class="landing-points__badge landing-points__badge--green">✓</span>
+        <div>
+          <span>Resultado correcto</span>
+          <small>Acertás quién gana o el empate, pero no el marcador</small>
+        </div>
+      </div>
       <span class="landing-points__val">1 pt</span>
     </div>
     <div class="landing-points__row">
-      <span>✗ Sin acierto</span>
+      <div class="landing-points__label">
+        <span class="landing-points__badge landing-points__badge--red">✗</span>
+        <div>
+          <span>Sin acierto</span>
+          <small>El partido terminó diferente a tu predicción</small>
+        </div>
+      </div>
       <span class="landing-points__val landing-points__val--muted">0 pts</span>
+    </div>
+    <div class="landing-points__footer">
+      <i class="bi bi-info-circle" aria-hidden="true"></i>
+      Empate en puntos al final del torneo → gana quien tenga más marcadores exactos
     </div>
   </div>
 
