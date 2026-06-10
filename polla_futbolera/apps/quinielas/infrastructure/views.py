@@ -105,6 +105,13 @@ def quiniela_list(request):
     _now = timezone.localtime(timezone.now())
     today_str = f"{_DIAS[_now.weekday()]} {_now.day} de {_MESES[_now.month - 1]}"
 
+    es_publico_sin_rol = (
+        request.user.is_authenticated
+        and not request.user.is_staff
+        and not request.user.is_superuser
+        and not request.user.groups.filter(name__in=["Jugador", "Moderador"]).exists()
+    )
+
     return render(request, "quinielas/list.html", {
         "quinielas": quinielas_publicas,
         "total_jugadores": total_jugadores,
@@ -112,6 +119,7 @@ def quiniela_list(request):
         "proximos_partidos": proximos_partidos,
         "mis_total_pts": mis_total_pts,
         "today": today_str,
+        "es_publico_sin_rol": es_publico_sin_rol,
     })
 
 

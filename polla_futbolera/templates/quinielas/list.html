@@ -64,6 +64,27 @@
 
 <!-- ── Dashboard personalizado del jugador ── -->
 
+{% if es_publico_sin_rol %}
+<!-- Banner "Convertite en jugador" para usuarios sin rol -->
+<div class="banner-join-player">
+  <div class="banner-join-player__icon">
+    <i class="bi bi-whatsapp"></i>
+  </div>
+  <div class="banner-join-player__body">
+    <p class="banner-join-player__title">¡Sumate al juego!</p>
+    <p class="banner-join-player__desc">Todavía no sos jugador. Escribinos por WhatsApp y en minutos te activamos.</p>
+  </div>
+  <a
+    href="https://wa.me/573147120410?text=Hola%2C+quiero+ser+jugador+en+Polla+Futbolera.+Mi+usuario+es%3A+{{ user.username|urlencode }}"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="btn btn-whatsapp banner-join-player__btn"
+  >
+    <i class="bi bi-whatsapp"></i> Quiero jugar
+  </a>
+</div>
+{% endif %}
+
 <!-- Hero de bienvenida -->
 <div class="player-hero">
   <div class="player-hero__greeting">
