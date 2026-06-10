@@ -22,32 +22,29 @@ class FechaAdmin(admin.ModelAdmin):
     search_fields = ("nombre",)
     actions = ["calcular_puntos_y_ranking"]
 
-    @admin.action(description="▶ Calcular puntos y recalcular rankings (async)")
+    @admin.action(description="▶ Calcular puntos y recalcular rankings")
     def calcular_puntos_y_ranking(self, request, queryset):
-        """
-        Encola el pipeline de scoring+ranking como tarea async en django-q2.
-        Responde inmediatamente y redirige al admin del job para seguir el progreso.
-        """
-        from django_q.tasks import async_task
         from apps.scoring.infrastructure.models import CalculoJob
+        from apps.scoring.application.tasks import pipeline_ranking
 
         job = CalculoJob.objects.create(iniciado_por=request.user)
         job.fechas.set(queryset)
 
-        async_task(
-            "apps.scoring.application.tasks.pipeline_ranking",
-            job.id,
-            task_name=f"ranking-job-{job.id}",
-        )
+        pipeline_ranking(job.id)
 
-        self.message_user(
-            request,
-            (
-                f"⏳ Cálculo encolado (Job #{job.id}). Podés ver el progreso en "
-                f"Admin → Scoring → Jobs de Cálculo."
-            ),
-            messages.INFO,
-        )
+        job.refresh_from_db()
+        if job.estado == "DONE":
+            self.message_user(
+                request,
+                f"✓ Pipeline completado (Job #{job.id}). {job.resumen}",
+                messages.SUCCESS,
+            )
+        else:
+            self.message_user(
+                request,
+                f"✗ Error en Job #{job.id}: {job.error_msg[:200]}",
+                messages.ERROR,
+            )
 
 
 @admin.register(Match)
