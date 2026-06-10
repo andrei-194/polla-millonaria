@@ -25,7 +25,7 @@
     </h1>
 
     <p class="landing-sub">
-      La competencia de pronósticos donde el fútbol que sabés se convierte en puntos reales. Predecí jornada a jornada y demostrá quién conoce el fútbol de verdad. <strong>Una sola cuota: $10.000.</strong>
+      La competencia de pronósticos donde el fútbol que sabés se convierte en puntos reales. Predecí jornada a jornada y demostrá quién conoce el fútbol de verdad. <strong>Cuota de entrada: $10.000.</strong> El bote acumulado ya está en $300.000 y sube por cada jugador que entra.
     </p>
 
     <a href="{% url 'accounts:register' %}" class="btn btn-primary landing-cta-primary">
@@ -44,7 +44,7 @@
     </div>
     <div class="hero-landing__stat-sep" aria-hidden="true"></div>
     <div class="hero-landing__stat">
-      <span class="hero-landing__stat-num">48</span>
+      <span class="hero-landing__stat-num">10</span>
       <span class="hero-landing__stat-label">Jugadores</span>
     </div>
     <div class="hero-landing__stat-sep" aria-hidden="true"></div>
@@ -52,9 +52,31 @@
       <span class="hero-landing__stat-num">$10K</span>
       <span class="hero-landing__stat-label">Cuota</span>
     </div>
+    <div class="hero-landing__stat-sep" aria-hidden="true"></div>
+    <div class="hero-landing__stat hero-landing__stat--gold">
+      <span class="hero-landing__stat-num">$300K</span>
+      <span class="hero-landing__stat-label">Premio</span>
+    </div>
   </div>
 
-  <!-- ③ COMPRENSIÓN — Valor del pago único -->
+  <!-- ③ BOTE CRECIENTE — El premio crece con cada jugador -->
+  <div class="landing-prize landing-reveal" role="region" aria-label="Bote acumulado">
+    <div class="landing-prize__tag">
+      <i class="bi bi-trophy-fill" aria-hidden="true"></i> Premio acumulado
+    </div>
+    <div class="landing-prize__formula" aria-label="Premio acumulado actual">
+      <div class="landing-prize__total">
+        <span class="landing-prize__total-num">$300.000</span>
+        <span class="landing-prize__total-label">para el ganador</span>
+      </div>
+    </div>
+    <p class="landing-prize__note">
+      <i class="bi bi-arrow-up-right-circle-fill" aria-hidden="true"></i>
+      <span>Cada jugador que entra suma <strong>$10.000 más</strong> al premio. Más participantes = mayor ganancia para quien termine primero.</span>
+    </p>
+  </div>
+
+  <!-- ④ COMPRENSIÓN — Valor del pago único -->
   <div class="landing-onepay landing-reveal" role="note">
     <i class="bi bi-shield-fill-check landing-onepay__icon" aria-hidden="true"></i>
     <div class="landing-onepay__text">
@@ -67,7 +89,7 @@
   <div class="landing-steps landing-reveal" role="list" aria-label="Cómo funciona">
     <div class="landing-step" role="listitem">
       <div class="landing-step__num">1</div>
-      <strong>Registrate y pagá</strong>
+      <strong>Registrate y pagá $10.000</strong>
     </div>
     <span class="landing-step-arrow" aria-hidden="true">›</span>
     <div class="landing-step" role="listitem">
@@ -81,7 +103,7 @@
     </div>
   </div>
 
-  <!-- ④ COMPRENSIÓN PROFUNDA — Cómo funciona en detalle -->
+  <!-- ⑤ COMPRENSIÓN PROFUNDA — Cómo funciona en detalle -->
   <div class="landing-explainer landing-reveal" role="region" aria-label="Cómo funciona el juego">
     <div class="landing-explainer__header">
       <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
@@ -113,7 +135,7 @@
     </div>
   </div>
 
-  <!-- ⑤ DESEO — Sistema de puntos -->
+  <!-- ⑥ DESEO — Sistema de puntos -->
   <div class="landing-points landing-reveal" role="region" aria-label="Sistema de puntos">
     <div class="landing-points__title">
       <i class="bi bi-star-fill" style="color:var(--gold)" aria-hidden="true"></i>
@@ -155,14 +177,14 @@
     </div>
   </div>
 
-  <!-- ⑥ ACCIÓN — CTA final -->
+  <!-- ⑦ ACCIÓN — CTA final -->
   <div class="guest-cta landing-reveal" role="complementary">
     <div class="guest-cta__orb" aria-hidden="true"></div>
     <p class="guest-cta__headline">¿Sabés<br><span style="color:var(--green)">de fútbol?</span></p>
-    <p class="guest-cta__sub">Demostralo. Por $10.000 entrás al reto, competís en todas las jornadas del torneo y tenés la chance real de cerrar la temporada en el primer lugar.</p>
+    <p class="guest-cta__sub">Demostralo. Por $10.000 entrás al reto, participás del bote acumulado de $300.000 y tenés la chance real de cerrar la temporada en el primer lugar.</p>
     <div class="guest-cta__stats">
       <span class="guest-cta__stat-dot" aria-hidden="true"></span>
-      $10.000 COP · ~$2.5 USD · Toda la temporada
+      $10.000 COP · bote acumulado $300.000 · Toda la temporada
     </div>
     <a href="{% url 'accounts:register' %}" class="btn btn-primary guest-cta__btn">
       <i class="bi bi-lightning-fill" aria-hidden="true"></i> Entrar al reto — $10.000
