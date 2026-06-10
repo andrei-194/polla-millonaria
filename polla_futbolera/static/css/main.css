@@ -2657,21 +2657,31 @@ textarea.form-input {
   margin: 0;
   font-size: var(--text-xs);
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
   display: flex;
   align-items: flex-start;
   gap: var(--s2);
   text-align: left;
+  width: 100%;
 }
 
 .landing-prize__note .bi {
   color: var(--green);
   font-size: 0.85rem;
   flex-shrink: 0;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
-.landing-prize__note strong { color: var(--text-primary); }
+.landing-prize__note span {
+  flex: 1;
+  min-width: 0;
+}
+
+.landing-prize__note strong {
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
 
 /* ── Landing: Scroll fade-in ───────────────────────────────── */
 .landing-reveal {
