@@ -67,18 +67,18 @@
 {% if es_publico_sin_rol %}
 <!-- Banner "Convertite en jugador" para usuarios sin rol -->
 <div class="banner-join-player">
-  <div class="banner-join-player__icon">
-    <i class="bi bi-whatsapp"></i>
-  </div>
-  <div class="banner-join-player__body">
+  <div class="banner-join-player__header">
+    <div class="banner-join-player__icon">
+      <i class="bi bi-whatsapp"></i>
+    </div>
     <p class="banner-join-player__title">¡Sumate al juego!</p>
-    <p class="banner-join-player__desc">Todavía no sos jugador. Escribinos por WhatsApp y en minutos te activamos.</p>
   </div>
+  <p class="banner-join-player__desc">Todavía no sos jugador. Escribinos por WhatsApp y te activamos en minutos.</p>
   <a
     href="https://wa.me/573147120410?text=Hola%2C+quiero+ser+jugador+en+Polla+Futbolera.+Mi+usuario+es%3A+{{ user.username|urlencode }}"
     target="_blank"
     rel="noopener noreferrer"
-    class="btn btn-whatsapp banner-join-player__btn"
+    class="btn btn-whatsapp"
   >
     <i class="bi bi-whatsapp"></i> Quiero jugar
   </a>

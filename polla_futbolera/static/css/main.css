@@ -2697,78 +2697,57 @@ textarea.form-input {
 
 /* ── Banner "Convertite en jugador" (usuarios sin rol) ─────── */
 .banner-join-player {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-  background: linear-gradient(135deg, rgba(0,230,118,.08) 0%, rgba(0,230,118,.04) 100%);
-  border: 1px solid rgba(0,230,118,.35);
-  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  border: 1px solid rgba(0,230,118,0.35);
+  border-radius: var(--r-lg);
   padding: var(--s4);
   margin-bottom: var(--s4);
 }
 
+.banner-join-player__header {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s2);
+}
+
 .banner-join-player__icon {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(0,230,118,.15);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  background: rgba(0,230,118,0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 18px;
   color: var(--green);
-}
-
-.banner-join-player__body {
-  flex: 1;
-  min-width: 0;
+  flex-shrink: 0;
 }
 
 .banner-join-player__title {
-  font-family: var(--ff-heading);
-  font-size: var(--fs-base);
   font-weight: var(--fw-bold);
+  font-size: var(--text-base);
   color: var(--green);
-  margin: 0 0 2px;
+  margin: 0;
   line-height: 1.2;
 }
 
 .banner-join-player__desc {
-  font-size: var(--fs-sm);
+  font-size: var(--text-sm);
   color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.4;
+  margin: 0 0 var(--s4);
+  line-height: 1.5;
 }
 
 .btn-whatsapp {
-  flex-shrink: 0;
   background: #25d366;
   color: #fff;
   border: none;
   font-weight: var(--fw-semibold);
-  font-size: var(--fs-sm);
-  white-space: nowrap;
 }
 
 .btn-whatsapp:hover,
 .btn-whatsapp:focus {
   background: #1ebe5d;
   color: #fff;
-}
-
-.banner-join-player__btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-@media (max-width: 480px) {
-  .banner-join-player {
-    flex-wrap: wrap;
-  }
-  .banner-join-player__btn {
-    width: 100%;
-    justify-content: center;
-  }
 }
