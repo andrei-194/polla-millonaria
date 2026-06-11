@@ -12,9 +12,11 @@ from apps.predictions.infrastructure.models import EventoPartido, PronosticoEven
 def _cargar_reglas(tipo_evento_id: int, quiniela_id: int) -> dict[str, int]:
     """Carga todas las reglas para un tipo+quiniela en un dict {codigo_acierto: puntos}.
     Reglas de quiniela específica tienen prioridad sobre globales."""
+    # __in=[..., None] no matchea NULL en PostgreSQL; usar Q explícito
     reglas_qs = ReglaPuntuacion.objects.filter(
         tipo_evento_id=tipo_evento_id,
-        quiniela_id__in=[quiniela_id, None],
+    ).filter(
+        Q(quiniela_id=quiniela_id) | Q(quiniela_id__isnull=True)
     )
     resultado = {}
     globales = {}
@@ -115,9 +117,11 @@ class ScoringService:
                 pronosticos_por_evento[p["evento_partido_id"]].append(p)
 
             # Query 3: todas las reglas de todos los tipos involucrados
+            # __in=[..., None] no matchea NULL en PostgreSQL; usar Q explícito
             reglas_qs = ReglaPuntuacion.objects.filter(
                 tipo_evento_id__in=tipo_ids,
-                quiniela_id__in=[quiniela_id, None],
+            ).filter(
+                Q(quiniela_id=quiniela_id) | Q(quiniela_id__isnull=True)
             )
             reglas_globales: dict[tuple, int] = {}
             reglas_especificas: dict[tuple, int] = {}
