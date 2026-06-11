@@ -24,6 +24,7 @@ class FechaAdmin(admin.ModelAdmin):
 
     @admin.action(description="▶ Calcular puntos y recalcular rankings")
     def calcular_puntos_y_ranking(self, request, queryset):
+        import json
         from apps.scoring.infrastructure.models import CalculoJob
         from apps.scoring.application.tasks import pipeline_ranking
 
@@ -34,11 +35,27 @@ class FechaAdmin(admin.ModelAdmin):
 
         job.refresh_from_db()
         if job.estado == "DONE":
-            self.message_user(
-                request,
-                f"✓ Pipeline completado (Job #{job.id}). {job.resumen}",
-                messages.SUCCESS,
-            )
+            resumen = json.loads(job.resumen) if job.resumen else {}
+            eventos_ok = resumen.get("eventos_ok", 0)
+            sin_resultado = resumen.get("sin_resultado", 0)
+            quinielas = resumen.get("quinielas_procesadas", 0)
+
+            if eventos_ok == 0:
+                self.message_user(
+                    request,
+                    f"⚠ Pipeline ejecutado pero sin puntuaciones (Job #{job.id}). "
+                    f"{sin_resultado} evento(s) sin resultado registrado. "
+                    f"Primero registra los resultados en Predictions → Eventos de partido, "
+                    f"luego vuelve a correr esta acción.",
+                    messages.WARNING,
+                )
+            else:
+                self.message_user(
+                    request,
+                    f"✓ {eventos_ok} evento(s) puntuados en {quinielas} quiniela(s). "
+                    f"{sin_resultado} evento(s) sin resultado (aún no jugados).",
+                    messages.SUCCESS,
+                )
         else:
             self.message_user(
                 request,
