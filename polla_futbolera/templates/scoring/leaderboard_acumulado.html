@@ -17,7 +17,17 @@
     <div style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:var(--fw-bold);letter-spacing:0.04em;text-transform:uppercase;">
       {{ quiniela.name }}
     </div>
-    <div class="text-xs text-muted" style="margin-top:4px;">Ranking acumulado</div>
+    <div style="display:flex;align-items:center;gap:var(--s2);margin-top:4px;">
+      <span class="text-xs text-muted">Ranking acumulado</span>
+      {% if ultimo_calculo %}
+      <span id="ranking-ts"
+            data-ts="{{ ultimo_calculo|date:'c' }}"
+            data-json-url="{% url 'quinielas:leaderboard_json' slug=quiniela.slug %}"
+            style="font-size:var(--text-xs);color:var(--text-muted);margin-left:auto;">
+        <i class="bi bi-arrow-clockwise"></i> <span id="ranking-ts-label">actualizado {{ ultimo_calculo|timesince }} atrás</span>
+      </span>
+      {% endif %}
+    </div>
   </div>
 </div>
 
@@ -68,4 +78,25 @@
 </div>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var meta = document.getElementById('ranking-ts');
+  if (!meta) return;
+  var knownTs = meta.dataset.ts;
+  var jsonUrl = meta.dataset.jsonUrl;
+  setInterval(function () {
+    fetch(jsonUrl)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.calculado_en && data.calculado_en !== knownTs) {
+          window.location.reload();
+        }
+      })
+      .catch(function () {});
+  }, 30000);
+})();
+</script>
 {% endblock %}
