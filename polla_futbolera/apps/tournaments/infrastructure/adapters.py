@@ -35,13 +35,13 @@ class FootballDataOrgAdapter(BaseHTTPClient, FootballAPIPort):
         return matches
 
     def fetch_results(self, match_external_id: str) -> ResultDTO:
+        # La API v4 de football-data.org devuelve el partido en el root del response
         data = self.get(f"/matches/{match_external_id}")
-        m = data["match"]
         return ResultDTO(
             external_id=match_external_id,
-            home_score=m["score"]["fullTime"]["home"],
-            away_score=m["score"]["fullTime"]["away"],
-            status=m["status"].lower(),
+            home_score=data["score"]["fullTime"]["home"],
+            away_score=data["score"]["fullTime"]["away"],
+            status=data["status"].lower(),
         )
 
 

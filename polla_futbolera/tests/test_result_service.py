@@ -51,7 +51,7 @@ class TestTraducirResultado(SimpleTestCase):
     # ── BTTS ─────────────────────────────────────────────────────────────────
 
     def test_btts_ambos_anotaron(self):
-        self.assertEqual(self.svc._traducir("BTTS", 1, 2), "si")
+        self.assertEqual(self.svc._traducir("BTTS", 1, 2), "yes")
 
     def test_btts_solo_local(self):
         self.assertEqual(self.svc._traducir("BTTS", 2, 0), "no")
@@ -126,7 +126,7 @@ class TestPropagarYCalcular(TournamentScenario):
         }
         self.assertEqual(resultados["SCORE"], "1-2")
         self.assertEqual(resultados["WINNER"], "A")
-        self.assertEqual(resultados["BTTS"], "si")
+        self.assertEqual(resultados["BTTS"], "yes")
         self.assertEqual(resultados["OU25"], "over")   # 1+2=3 > 2.5
 
     def test_propagar_es_idempotente(self):

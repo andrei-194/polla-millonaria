@@ -86,7 +86,7 @@ class MatchResultService:
                 return "A"
             return "D"
         if codigo == "BTTS":
-            return "si" if home > 0 and away > 0 else "no"
+            return "yes" if home > 0 and away > 0 else "no"
         if codigo == "OU25":
             return "over" if home + away > 2 else "under"
         # Tipo desconocido: devolver string del marcador como fallback
