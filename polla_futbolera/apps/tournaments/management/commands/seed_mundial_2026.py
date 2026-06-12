@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta, timezone
+
+from django.conf import settings
 from pathlib import Path
 
 from django.conf import settings
@@ -236,7 +238,8 @@ class Command(BaseCommand):
         ))
 
         if options["quiniela_slug"]:
-            self._seed_eventos(options["quiniela_slug"], torneo)
+            deadline_minutes = getattr(settings, "PREDICTION_DEADLINE_MINUTES", 20)
+            self._seed_eventos(options["quiniela_slug"], torneo, deadline_minutes)
 
     # ──────────────────────────────────────────────────────────────────────
 
@@ -295,28 +298,42 @@ class Command(BaseCommand):
             match_date = _parse_utc(dt_str)
 
             if force:
-                Match.objects.filter(external_id=ext_id).delete()
+                Match.objects.filter(
+                    tournament=torneo,
+                    home_team=equipos[home_code],
+                    away_team=equipos[away_code],
+                ).delete()
 
-            _, created = Match.objects.get_or_create(
-                external_id=ext_id,
-                defaults={
-                    "tournament": torneo,
-                    "home_team": equipos[home_code],
-                    "away_team": equipos[away_code],
-                    "phase": phase,
-                    "match_date": match_date,
-                    "status": "scheduled",
-                    "fecha": fechas[fecha_num],
-                },
+            # Idempotencia robusta: buscar por external_id sintético primero,
+            # luego por nombre de equipo (cubre el caso en que sync_wc2026_ids
+            # ya mapeó el external_id a numérico, o que el equipo tenga un código
+            # distinto por haber sido sembrado con una versión anterior del seed).
+            exists = (
+                Match.objects.filter(external_id=ext_id).exists()
+                or Match.objects.filter(
+                    tournament=torneo,
+                    home_team__name=equipos[home_code].name,
+                    away_team__name=equipos[away_code].name,
+                ).exists()
             )
-            if created:
+            if not exists:
+                Match.objects.create(
+                    external_id=ext_id,
+                    tournament=torneo,
+                    home_team=equipos[home_code],
+                    away_team=equipos[away_code],
+                    phase=phase,
+                    match_date=match_date,
+                    status="scheduled",
+                    fecha=fechas[fecha_num],
+                )
                 nuevos += 1
 
         total = len(PARTIDOS)
         self.stdout.write(f"  Partidos:{nuevos} nuevos, {total - nuevos} ya existían")
         return total
 
-    def _seed_eventos(self, slug, torneo):
+    def _seed_eventos(self, slug, torneo, deadline_minutes):
         from apps.predictions.infrastructure.models import EventoPartido, TipoEvento
         from apps.quinielas.infrastructure.models import Quiniela
         from apps.tournaments.infrastructure.models import Match
@@ -342,7 +359,7 @@ class Command(BaseCommand):
                     tipo_evento=tipo,
                     defaults={
                         "estado": EventoPartido.Estado.ABIERTO,
-                        "plazo_cierre": match.match_date - timedelta(hours=1),
+                        "plazo_cierre": match.match_date - timedelta(minutes=deadline_minutes),
                     },
                 )
                 if created:
