@@ -35,6 +35,7 @@ ALIAS = {
     "dr congo": "rd congo",
     "democratic republic of congo": "rd congo",
     "czech republic": "chequia",
+    "czechia": "chequia",
     "south korea": "corea del sur",
     "south africa": "sudafrica",
     "saudi arabia": "arabia saudita",

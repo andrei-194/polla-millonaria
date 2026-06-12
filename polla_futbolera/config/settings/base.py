@@ -78,7 +78,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "es"
-TIME_ZONE = "America/Santiago"
+TIME_ZONE = "America/Bogota"
 USE_I18N = True
 USE_TZ = True
 
@@ -96,7 +96,7 @@ LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/quinielas/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
-PREDICTION_DEADLINE_MINUTES = config("PREDICTION_DEADLINE_MINUTES", default=60, cast=int)
+PREDICTION_DEADLINE_MINUTES = config("PREDICTION_DEADLINE_MINUTES", default=20, cast=int)
 
 FOOTBALL_API_KEY = config("FOOTBALL_API_KEY", default="")
 FOOTBALL_API_BASE_URL = config("FOOTBALL_API_BASE_URL", default="https://api.football-data.org/v4")
