@@ -7,3 +7,4 @@ python-decouple==3.*
 Pillow==10.*
 qrcode==8.*
 django-q2>=1.7.0
+croniter>=2.0.0
