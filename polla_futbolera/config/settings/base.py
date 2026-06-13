@@ -31,6 +31,7 @@ LOCAL_APPS = [
     "apps.scoring",
     "apps.notifications",
     "apps.announcements",
+    "apps.observability",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -97,6 +98,15 @@ LOGIN_REDIRECT_URL = "/quinielas/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 PREDICTION_DEADLINE_MINUTES = config("PREDICTION_DEADLINE_MINUTES", default=20, cast=int)
+
+# Observabilidad de performance
+OBSERVABILITY_ALERT_EMAILS = [
+    e.strip()
+    for e in config("OBSERVABILITY_ALERT_EMAILS", default="").split(",")
+    if e.strip()
+]
+OBSERVABILITY_THROTTLE_MINUTOS = config("OBSERVABILITY_THROTTLE_MINUTOS", default=30, cast=int)
+OBSERVABILITY_RETENTION_DAYS = config("OBSERVABILITY_RETENTION_DAYS", default=30, cast=int)
 
 FOOTBALL_API_KEY = config("FOOTBALL_API_KEY", default="")
 FOOTBALL_API_BASE_URL = config("FOOTBALL_API_BASE_URL", default="https://api.football-data.org/v4")

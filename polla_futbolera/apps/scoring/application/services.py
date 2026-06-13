@@ -7,6 +7,7 @@ from ..domain.entities import RankingEntrada
 from ..domain.exceptions import EventoSinResultadoError
 from ..infrastructure.models import PuntuacionEvento, ReglaPuntuacion, RankingFecha, RankingAcumulado
 from apps.predictions.infrastructure.models import EventoPartido, PronosticoEvento
+from apps.observability.application.tracking import PerfTracker
 
 
 def _cargar_reglas(tipo_evento_id: int, quiniela_id: int) -> dict[str, int]:
@@ -87,87 +88,96 @@ class ScoringService:
     def calcular_puntos_fecha(self, quiniela_id: int, fecha_id: int) -> dict:
         """Calcula puntos para TODOS los eventos de una fecha en exactamente 4 queries.
         Retorna {'ok': N, 'sin_resultado': [ids]}."""
-        with transaction.atomic():
-            # Query 1: todos los eventos de la fecha
-            eventos = list(
-                EventoPartido.objects
-                .filter(partido__fecha_id=fecha_id, quiniela_id=quiniela_id)
-                .exclude(estado="cancelado")
-                .select_related("tipo_evento")
-            )
+        with PerfTracker(
+            "scoring.calcular_puntos_fecha",
+            umbral_ms=800,
+            quiniela_id=quiniela_id,
+            fecha_id=fecha_id,
+        ) as tracker:
+            with transaction.atomic():
+                # Query 1: todos los eventos de la fecha
+                eventos = list(
+                    EventoPartido.objects
+                    .filter(partido__fecha_id=fecha_id, quiniela_id=quiniela_id)
+                    .exclude(estado="cancelado")
+                    .select_related("tipo_evento")
+                )
 
-            eventos_con_resultado = [e for e in eventos if e.resultado]
-            sin_resultado = [e.id for e in eventos if not e.resultado]
+                eventos_con_resultado = [e for e in eventos if e.resultado]
+                sin_resultado = [e.id for e in eventos if not e.resultado]
 
-            if not eventos_con_resultado:
-                return {"ok": 0, "sin_resultado": sin_resultado}
+                if not eventos_con_resultado:
+                    return {"ok": 0, "sin_resultado": sin_resultado}
 
-            evento_ids = [e.id for e in eventos_con_resultado]
-            tipo_ids = {e.tipo_evento_id for e in eventos_con_resultado}
+                evento_ids = [e.id for e in eventos_con_resultado]
+                tipo_ids = {e.tipo_evento_id for e in eventos_con_resultado}
 
-            # Query 2: todos los pronósticos de todos los eventos en una sola query
-            pronosticos = list(
-                PronosticoEvento.objects
-                .filter(evento_partido_id__in=evento_ids)
-                .values("usuario_id", "evento_partido_id", "valor")
-            )
+                # Query 2: todos los pronósticos de todos los eventos en una sola query
+                pronosticos = list(
+                    PronosticoEvento.objects
+                    .filter(evento_partido_id__in=evento_ids)
+                    .values("usuario_id", "evento_partido_id", "valor")
+                )
 
-            pronosticos_por_evento: dict[int, list] = defaultdict(list)
-            for p in pronosticos:
-                pronosticos_por_evento[p["evento_partido_id"]].append(p)
+                pronosticos_por_evento: dict[int, list] = defaultdict(list)
+                for p in pronosticos:
+                    pronosticos_por_evento[p["evento_partido_id"]].append(p)
 
-            # Query 3: todas las reglas de todos los tipos involucrados
-            # __in=[..., None] no matchea NULL en PostgreSQL; usar Q explícito
-            reglas_qs = ReglaPuntuacion.objects.filter(
-                tipo_evento_id__in=tipo_ids,
-            ).filter(
-                Q(quiniela_id=quiniela_id) | Q(quiniela_id__isnull=True)
-            )
-            reglas_globales: dict[tuple, int] = {}
-            reglas_especificas: dict[tuple, int] = {}
-            for r in reglas_qs:
-                key = (r.tipo_evento_id, r.codigo_acierto)
-                if r.quiniela_id is None:
-                    reglas_globales[key] = r.puntos
-                else:
-                    reglas_especificas[key] = r.puntos
-            reglas = {**reglas_globales, **reglas_especificas}
+                # Query 3: todas las reglas de todos los tipos involucrados
+                # __in=[..., None] no matchea NULL en PostgreSQL; usar Q explícito
+                reglas_qs = ReglaPuntuacion.objects.filter(
+                    tipo_evento_id__in=tipo_ids,
+                ).filter(
+                    Q(quiniela_id=quiniela_id) | Q(quiniela_id__isnull=True)
+                )
+                reglas_globales: dict[tuple, int] = {}
+                reglas_especificas: dict[tuple, int] = {}
+                for r in reglas_qs:
+                    key = (r.tipo_evento_id, r.codigo_acierto)
+                    if r.quiniela_id is None:
+                        reglas_globales[key] = r.puntos
+                    else:
+                        reglas_especificas[key] = r.puntos
+                reglas = {**reglas_globales, **reglas_especificas}
 
-            # Evaluación en memoria — sin queries adicionales
-            puntuaciones = []
-            for evento in eventos_con_resultado:
-                for pron in pronosticos_por_evento[evento.id]:
-                    codigo_acierto = self._evaluar(
-                        evento.tipo_evento.codigo,
-                        pron["valor"],
-                        evento.resultado,
-                    )
-                    puntos = reglas.get((evento.tipo_evento_id, codigo_acierto), 0)
-                    puntuaciones.append(PuntuacionEvento(
-                        usuario_id=pron["usuario_id"],
-                        evento_partido_id=evento.id,
-                        quiniela_id=quiniela_id,
-                        valor_pronosticado=pron["valor"],
-                        valor_resultado=evento.resultado,
-                        codigo_acierto=codigo_acierto,
-                        puntos=puntos,
-                    ))
+                # Evaluación en memoria — sin queries adicionales
+                puntuaciones = []
+                for evento in eventos_con_resultado:
+                    for pron in pronosticos_por_evento[evento.id]:
+                        codigo_acierto = self._evaluar(
+                            evento.tipo_evento.codigo,
+                            pron["valor"],
+                            evento.resultado,
+                        )
+                        puntos = reglas.get((evento.tipo_evento_id, codigo_acierto), 0)
+                        puntuaciones.append(PuntuacionEvento(
+                            usuario_id=pron["usuario_id"],
+                            evento_partido_id=evento.id,
+                            quiniela_id=quiniela_id,
+                            valor_pronosticado=pron["valor"],
+                            valor_resultado=evento.resultado,
+                            codigo_acierto=codigo_acierto,
+                            puntos=puntos,
+                        ))
 
-            # Query 4a: bulk_create de todos los PuntuacionEvento
-            PuntuacionEvento.objects.bulk_create(
-                puntuaciones,
-                update_conflicts=True,
-                unique_fields=["usuario_id", "evento_partido_id"],
-                update_fields=[
-                    "valor_pronosticado", "valor_resultado",
-                    "codigo_acierto", "puntos", "calculado_en",
-                ],
-            )
+                # Query 4a: bulk_create de todos los PuntuacionEvento
+                PuntuacionEvento.objects.bulk_create(
+                    puntuaciones,
+                    update_conflicts=True,
+                    unique_fields=["usuario_id", "evento_partido_id"],
+                    update_fields=[
+                        "valor_pronosticado", "valor_resultado",
+                        "codigo_acierto", "puntos", "calculado_en",
+                    ],
+                )
 
-            # Query 4b: UPDATE de estado en un solo statement
-            EventoPartido.objects.filter(id__in=evento_ids).update(estado="puntuado")
+                # Query 4b: UPDATE de estado en un solo statement
+                EventoPartido.objects.filter(id__in=evento_ids).update(estado="puntuado")
 
-            return {"ok": len(eventos_con_resultado), "sin_resultado": sin_resultado}
+                resultado = {"ok": len(eventos_con_resultado), "sin_resultado": sin_resultado}
+                tracker.extra["n_eventos"] = len(eventos_con_resultado)
+                tracker.extra["n_puntuaciones"] = len(puntuaciones)
+                return resultado
 
     def _evaluar(self, codigo_tipo: str, valor_pronosticado: str, valor_resultado: str) -> str:
         if codigo_tipo == "SCORE":
@@ -208,80 +218,93 @@ class ScoringService:
 class RankingService:
 
     def recalcular_ranking_fecha(self, quiniela_id: int, fecha_id: int) -> None:
-        with transaction.atomic():
-            puntos_qs = (
-                PuntuacionEvento.objects
-                .filter(
-                    quiniela_id=quiniela_id,
-                    evento_partido__partido__fecha_id=fecha_id,
+        with PerfTracker(
+            "scoring.ranking_fecha",
+            umbral_ms=300,
+            quiniela_id=quiniela_id,
+            fecha_id=fecha_id,
+        ) as tracker:
+            with transaction.atomic():
+                puntos_qs = (
+                    PuntuacionEvento.objects
+                    .filter(
+                        quiniela_id=quiniela_id,
+                        evento_partido__partido__fecha_id=fecha_id,
+                    )
+                    .values("usuario_id", "usuario__username")
+                    .annotate(puntos=Sum("puntos"))
+                    .order_by("-puntos")
                 )
-                .values("usuario_id", "usuario__username")
-                .annotate(puntos=Sum("puntos"))
-                .order_by("-puntos")
-            )
 
-            ranking = self._asignar_posiciones(list(puntos_qs), campo_puntos="puntos")
+                ranking = self._asignar_posiciones(list(puntos_qs), campo_puntos="puntos")
 
-            entradas = [
-                RankingFecha(
-                    quiniela_id=quiniela_id,
-                    fecha_id=fecha_id,
-                    usuario_id=entrada["usuario_id"],
-                    puntos=entrada["puntos"],
-                    posicion=entrada["posicion"],
+                entradas = [
+                    RankingFecha(
+                        quiniela_id=quiniela_id,
+                        fecha_id=fecha_id,
+                        usuario_id=entrada["usuario_id"],
+                        puntos=entrada["puntos"],
+                        posicion=entrada["posicion"],
+                    )
+                    for entrada in ranking
+                ]
+                RankingFecha.objects.bulk_create(
+                    entradas,
+                    update_conflicts=True,
+                    unique_fields=["quiniela_id", "fecha_id", "usuario_id"],
+                    update_fields=["puntos", "posicion", "calculado_en"],
                 )
-                for entrada in ranking
-            ]
-            RankingFecha.objects.bulk_create(
-                entradas,
-                update_conflicts=True,
-                unique_fields=["quiniela_id", "fecha_id", "usuario_id"],
-                update_fields=["puntos", "posicion", "calculado_en"],
-            )
+                tracker.extra["n_usuarios"] = len(entradas)
 
     def recalcular_ranking_acumulado(self, quiniela_id: int) -> None:
-        with transaction.atomic():
-            stats_qs = (
-                PuntuacionEvento.objects
-                .filter(quiniela_id=quiniela_id)
-                .values("usuario_id", "usuario__username")
-                .annotate(
-                    puntos=Sum("puntos"),
-                    exactos_total=Count("id", filter=Q(codigo_acierto="EXACT")),
-                    aciertos_total=Count(
-                        "id",
-                        filter=Q(codigo_acierto__in=["EXACT", "GOAL_DIFF", "WINNER", "HIT"])
-                    ),
-                    fechas_jugadas=Count(
-                        "evento_partido__partido__fecha_id", distinct=True
-                    ),
+        with PerfTracker(
+            "scoring.ranking_acumulado",
+            umbral_ms=600,
+            quiniela_id=quiniela_id,
+        ) as tracker:
+            with transaction.atomic():
+                stats_qs = (
+                    PuntuacionEvento.objects
+                    .filter(quiniela_id=quiniela_id)
+                    .values("usuario_id", "usuario__username")
+                    .annotate(
+                        puntos=Sum("puntos"),
+                        exactos_total=Count("id", filter=Q(codigo_acierto="EXACT")),
+                        aciertos_total=Count(
+                            "id",
+                            filter=Q(codigo_acierto__in=["EXACT", "GOAL_DIFF", "WINNER", "HIT"])
+                        ),
+                        fechas_jugadas=Count(
+                            "evento_partido__partido__fecha_id", distinct=True
+                        ),
+                    )
+                    .order_by("-puntos")
                 )
-                .order_by("-puntos")
-            )
 
-            ranking = self._asignar_posiciones(list(stats_qs), campo_puntos="puntos")
+                ranking = self._asignar_posiciones(list(stats_qs), campo_puntos="puntos")
 
-            entradas = [
-                RankingAcumulado(
-                    quiniela_id=quiniela_id,
-                    usuario_id=entrada["usuario_id"],
-                    puntos_total=entrada["puntos"] or 0,
-                    posicion=entrada["posicion"],
-                    fechas_jugadas=entrada["fechas_jugadas"],
-                    exactos_total=entrada["exactos_total"],
-                    aciertos_total=entrada["aciertos_total"],
+                entradas = [
+                    RankingAcumulado(
+                        quiniela_id=quiniela_id,
+                        usuario_id=entrada["usuario_id"],
+                        puntos_total=entrada["puntos"] or 0,
+                        posicion=entrada["posicion"],
+                        fechas_jugadas=entrada["fechas_jugadas"],
+                        exactos_total=entrada["exactos_total"],
+                        aciertos_total=entrada["aciertos_total"],
+                    )
+                    for entrada in ranking
+                ]
+                RankingAcumulado.objects.bulk_create(
+                    entradas,
+                    update_conflicts=True,
+                    unique_fields=["quiniela_id", "usuario_id"],
+                    update_fields=[
+                        "puntos_total", "posicion", "fechas_jugadas",
+                        "exactos_total", "aciertos_total", "calculado_en",
+                    ],
                 )
-                for entrada in ranking
-            ]
-            RankingAcumulado.objects.bulk_create(
-                entradas,
-                update_conflicts=True,
-                unique_fields=["quiniela_id", "usuario_id"],
-                update_fields=[
-                    "puntos_total", "posicion", "fechas_jugadas",
-                    "exactos_total", "aciertos_total", "calculado_en",
-                ],
-            )
+                tracker.extra["n_usuarios"] = len(entradas)
 
     def _asignar_posiciones(self, lista: list[dict], campo_puntos: str) -> list[dict]:
         sorted_list = sorted(lista, key=lambda x: x[campo_puntos] or 0, reverse=True)
