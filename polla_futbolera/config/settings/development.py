@@ -32,7 +32,10 @@ else:
         }
     }
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend",
+)
 
 # En dev: servir estáticos directamente sin hashing para ver cambios al instante
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
