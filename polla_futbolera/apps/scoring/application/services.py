@@ -232,11 +232,22 @@ class RankingService:
                         evento_partido__partido__fecha_id=fecha_id,
                     )
                     .values("usuario_id", "usuario__username")
-                    .annotate(puntos=Sum("puntos"))
-                    .order_by("-puntos")
+                    .annotate(
+                        puntos=Sum("puntos"),
+                        exactos=Count("id", filter=Q(codigo_acierto="EXACT")),
+                        aciertos=Count(
+                            "id",
+                            filter=Q(codigo_acierto__in=["EXACT", "GOAL_DIFF", "WINNER", "HIT"])
+                        ),
+                    )
+                    .order_by("-puntos", "-exactos", "-aciertos")
                 )
 
-                ranking = self._asignar_posiciones(list(puntos_qs), campo_puntos="puntos")
+                ranking = self._asignar_posiciones(
+                    list(puntos_qs),
+                    campo_puntos="puntos",
+                    desempates=["exactos", "aciertos"],
+                )
 
                 entradas = [
                     RankingFecha(
@@ -278,10 +289,14 @@ class RankingService:
                             "evento_partido__partido__fecha_id", distinct=True
                         ),
                     )
-                    .order_by("-puntos")
+                    .order_by("-puntos", "-exactos_total", "-aciertos_total")
                 )
 
-                ranking = self._asignar_posiciones(list(stats_qs), campo_puntos="puntos")
+                ranking = self._asignar_posiciones(
+                    list(stats_qs),
+                    campo_puntos="puntos",
+                    desempates=["exactos_total", "aciertos_total"],
+                )
 
                 entradas = [
                     RankingAcumulado(
@@ -306,11 +321,21 @@ class RankingService:
                 )
                 tracker.extra["n_usuarios"] = len(entradas)
 
-    def _asignar_posiciones(self, lista: list[dict], campo_puntos: str) -> list[dict]:
-        sorted_list = sorted(lista, key=lambda x: x[campo_puntos] or 0, reverse=True)
+    def _asignar_posiciones(
+        self,
+        lista: list[dict],
+        campo_puntos: str,
+        desempates: list[str] | None = None,
+    ) -> list[dict]:
+        desempates = desempates or []
+
+        def sort_key(x):
+            return tuple(-(x.get(c) or 0) for c in [campo_puntos] + desempates)
+
+        sorted_list = sorted(lista, key=sort_key)
         posicion = 1
         for i, entrada in enumerate(sorted_list):
-            if i > 0 and (sorted_list[i - 1][campo_puntos] or 0) != (entrada[campo_puntos] or 0):
+            if i > 0 and sort_key(sorted_list[i - 1]) != sort_key(entrada):
                 posicion = i + 1
             entrada["posicion"] = posicion
         return sorted_list
