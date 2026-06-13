@@ -1,5 +1,6 @@
 from django.core.paginator import Paginator
 from django.db.models import Count
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
@@ -11,6 +12,23 @@ from ..application.services import PredictionService
 from ..application.dtos import CrearPronosticoEventoDTO
 from ..domain.exceptions import ValorInvalidoError, EventoCerradoError
 from .models import EventoPartido, PronosticoEvento
+
+
+def _tiene_eventos_abiertos(eventos: list) -> bool:
+    return any(ev_item["evento"].esta_abierto() for ev_item in eventos)
+
+
+def _build_valor_display(valor: str, evento) -> str:
+    """Etiqueta legible del valor para actualizar el DOM tras un pronóstico AJAX."""
+    codigo = evento.tipo_evento.codigo
+    if codigo == "WINNER":
+        if valor == "H":
+            return evento.partido.home_team.name
+        if valor == "D":
+            return "Empate"
+        if valor == "A":
+            return evento.partido.away_team.name
+    return valor
 
 
 def _check_inscripcion(request, quiniela):
@@ -96,10 +114,15 @@ def fecha_detail_view(request, slug, numero):
         for partido in partidos
     ]
 
+    partidos_abiertos = [p for p in partidos_con_eventos if _tiene_eventos_abiertos(p["eventos"])]
+    partidos_cerrados = [p for p in partidos_con_eventos if not _tiene_eventos_abiertos(p["eventos"])]
+
     return render(request, "predictions/fecha_detail.html", {
         "quiniela": quiniela,
         "fecha": fecha,
         "partidos_con_eventos": partidos_con_eventos,
+        "partidos_abiertos": partidos_abiertos,
+        "partidos_cerrados": partidos_cerrados,
     })
 
 
@@ -117,12 +140,23 @@ def pronosticar_evento_view(request, slug, evento_id):
     ).first()
 
     if request.method == "POST":
-        if evento.tipo_evento.codigo == "SCORE":
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+        if is_ajax:
+            # AJAX: el JS siempre envía el campo "valor" ya construido (incluido "home-away" para SCORE)
+            valor = request.POST.get("valor", "").strip()[:50]
+            if not valor:
+                return JsonResponse(
+                    {"ok": False, "error": "invalido", "mensaje": "Valor vacío."},
+                    status=422,
+                )
+        elif evento.tipo_evento.codigo == "SCORE":
             home = request.POST.get("home", "").strip()
             away = request.POST.get("away", "").strip()
             valor = f"{home}-{away}"
         else:
             valor = request.POST.get("valor", "").strip()
+
         service = PredictionService()
         try:
             service.crear_pronostico_evento(CrearPronosticoEventoDTO(
@@ -130,12 +164,28 @@ def pronosticar_evento_view(request, slug, evento_id):
                 evento_partido_id=evento.id,
                 valor=valor,
             ))
+            if is_ajax:
+                return JsonResponse({
+                    "ok": True,
+                    "valor": valor,
+                    "valor_display": _build_valor_display(valor, evento),
+                })
             messages.success(request, "Jugada guardada")
             numero_fecha = evento.partido.fecha.numero if evento.partido.fecha else 1
             return redirect("quinielas:fecha_detail", slug=slug, numero=numero_fecha)
         except EventoCerradoError as e:
+            if is_ajax:
+                return JsonResponse(
+                    {"ok": False, "error": "cerrado", "mensaje": str(e)},
+                    status=409,
+                )
             messages.error(request, str(e))
         except ValorInvalidoError as e:
+            if is_ajax:
+                return JsonResponse(
+                    {"ok": False, "error": "invalido", "mensaje": str(e)},
+                    status=422,
+                )
             messages.error(request, str(e))
 
     score_home = score_away = ""
