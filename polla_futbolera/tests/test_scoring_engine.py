@@ -352,12 +352,12 @@ class TestCalcularPuntosFechaBulk(TournamentScenario):
         # Con DEBUG=True Django registra cada query
         connection.queries_log.clear()
         ScoringService().calcular_puntos_fecha(self.quiniela.id, self.fecha.id)
-        # savepoint open + 4 queries de negocio + savepoint release = 6 como máximo
+        # savepoint + 4 queries negocio + savepoint release + 1 INSERT observabilidad = 8 máximo
         # Las 4 queries de negocio son: eventos, pronósticos, reglas, bulk_create+update
         n_queries = len(connection.queries)
         self.assertLessEqual(
-            n_queries, 7,
-            f"Se esperaban ≤7 queries (4 negocio + savepoints), se ejecutaron {n_queries}: "
+            n_queries, 8,
+            f"Se esperaban ≤8 queries (4 negocio + savepoints + observabilidad), se ejecutaron {n_queries}: "
             + str([q["sql"][:80] for q in connection.queries]),
         )
 

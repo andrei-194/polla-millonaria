@@ -45,3 +45,33 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("Schedule sync_match_results creado (cada 15 min)."))
         else:
             self.stdout.write("Schedule sync_match_results ya presente.")
+
+        schedule_reporte, created_r = Schedule.objects.get_or_create(
+            name="observabilidad_reporte_diario",
+            defaults={
+                "func": "django.core.management.call_command",
+                "args": '["enviar_reporte_performance"]',
+                "schedule_type": Schedule.CRON,
+                "cron": "0 8 * * *",
+                "repeats": -1,
+            },
+        )
+        if created_r:
+            self.stdout.write(self.style.SUCCESS("Schedule reporte_diario creado (08:00 UTC diario)."))
+        else:
+            self.stdout.write("Schedule reporte_diario ya presente.")
+
+        schedule_limpieza, created_l = Schedule.objects.get_or_create(
+            name="observabilidad_limpiar_metricas",
+            defaults={
+                "func": "django.core.management.call_command",
+                "args": '["limpiar_metricas_antiguas"]',
+                "schedule_type": Schedule.CRON,
+                "cron": "0 3 * * *",
+                "repeats": -1,
+            },
+        )
+        if created_l:
+            self.stdout.write(self.style.SUCCESS("Schedule limpiar_metricas creado (03:00 UTC diario)."))
+        else:
+            self.stdout.write("Schedule limpiar_metricas ya presente.")
