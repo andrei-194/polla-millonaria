@@ -1,4 +1,5 @@
 import logging
+import math
 from datetime import timedelta
 
 from django.conf import settings
@@ -158,7 +159,8 @@ class ReporteService:
         if not valores:
             return 0.0
         sorted_v = sorted(valores)
-        idx = max(0, int(len(sorted_v) * p / 100) - 1)
+        # ceil asegura que p95 de 10 valores dé el índice 9, no el 8
+        idx = max(0, math.ceil(len(sorted_v) * p / 100) - 1)
         return sorted_v[idx]
 
     def _calcular_tendencias(self, actual: dict[str, list], metricas_7d: list) -> str:
