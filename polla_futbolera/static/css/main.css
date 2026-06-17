@@ -2950,6 +2950,7 @@ textarea.form-input {
 /* ── Section Divider (acordeón partidos cerrados) ── */
 .section-divider {
   margin-top: var(--s4);
+  margin-bottom: var(--s4);
 }
 
 .section-divider__toggle {
@@ -2966,11 +2967,15 @@ textarea.form-input {
   font-weight: var(--fw-medium);
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
+  transition: background 0.15s, box-shadow 0.15s;
+  position: sticky;
+  top: var(--header-h);
+  z-index: 50;
 }
 
 .section-divider__toggle:hover {
   background: var(--bg-surface);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
 }
 
 .section-divider__label {
