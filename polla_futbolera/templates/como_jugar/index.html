@@ -27,7 +27,7 @@
     <div class="rules-step__num">2</div>
     <div class="rules-step__body">
       <strong>Hacé tus jugadas</strong>
-      <p>Antes de cada partido elegí el resultado: victoria local, empate o victoria visitante.</p>
+      <p>Antes de cada partido elegí el resultado. Hay hasta 4 tipos de jugada por partido.</p>
     </div>
   </div>
   <div class="rules-step">
@@ -39,36 +39,102 @@
   </div>
 </div>
 
+<!-- Tipos de jugadas -->
+<div class="section-title">¿Qué podés pronosticar?</div>
+
+<div class="rules-events">
+  <div class="rules-event-card">
+    <div class="rules-event-card__left">
+      <span class="rules-event-card__name">🎯 Marcador exacto</span>
+      <span class="rules-event-card__desc">El resultado final gol a gol — ej: 2–1</span>
+    </div>
+    <span class="rules-event-card__pts">hasta <strong>3 pts</strong></span>
+  </div>
+  <div class="rules-event-card">
+    <div class="rules-event-card__left">
+      <span class="rules-event-card__name">🏠 ¿Quién gana?</span>
+      <span class="rules-event-card__desc">Local / Empate / Visitante</span>
+    </div>
+    <span class="rules-event-card__pts">hasta <strong>3 pts</strong></span>
+  </div>
+  <div class="rules-event-card">
+    <div class="rules-event-card__left">
+      <span class="rules-event-card__name">⚽ ¿Ambos anotan?</span>
+      <span class="rules-event-card__desc">¿Los dos equipos marcan al menos 1 gol? Sí / No</span>
+    </div>
+    <span class="rules-event-card__pts">hasta <strong>2 pts</strong></span>
+  </div>
+  <div class="rules-event-card">
+    <div class="rules-event-card__left">
+      <span class="rules-event-card__name">📊 ¿Más o menos de 2.5 goles?</span>
+      <span class="rules-event-card__desc">¿La suma de goles supera 2.5? Más / Menos</span>
+    </div>
+    <span class="rules-event-card__pts">hasta <strong>2 pts</strong></span>
+  </div>
+</div>
+
+<div class="rules-max-pts">
+  <i class="bi bi-star-fill" style="color:var(--gold);" aria-hidden="true"></i>
+  Máximo posible: <strong>10 pts por partido</strong>&nbsp;si están activos los 4 tipos de jugada
+</div>
+
 <!-- Sistema de puntos -->
-<div class="section-title">Sistema de puntos</div>
+<div class="section-title">¿Cuántos puntos ganás?</div>
+
+<p style="font-size:var(--text-sm);color:var(--text-muted);margin:0 0 var(--s3);">
+  El <strong>marcador exacto</strong> tiene 4 niveles de acierto. Las jugadas de ¿Quién gana?, ¿Ambos anotan? y ¿Más o menos goles? son acierto total o cero.
+</p>
 
 <div class="rules-points">
   <div class="rules-points__row rules-points__row--highlight">
     <div class="rules-points__left">
       <span class="rules-points__badge rules-points__badge--gold">✓✓</span>
-      <span class="rules-points__label">Resultado exacto</span>
+      <span class="rules-points__label">Marcador exacto</span>
     </div>
     <span class="rules-points__val">3 pts</span>
   </div>
-  <p class="rules-points__desc">Acertás el resultado final Y el marcador exacto (ej: 2–1).</p>
+  <p class="rules-points__desc">Tu pronóstico coincide gol a gol con el resultado (ej: pronosticaste 2–1, terminó 2–1).</p>
+
+  <div class="rules-points__row rules-points__row--silver">
+    <div class="rules-points__left">
+      <span class="rules-points__badge rules-points__badge--silver">≈</span>
+      <span class="rules-points__label">Diferencia de goles igual</span>
+    </div>
+    <span class="rules-points__val">2 pts</span>
+  </div>
+  <p class="rules-points__desc">El ganador es correcto y la diferencia de goles es la misma, aunque el marcador sea diferente (ej: pronosticaste 2–1, terminó 3–2 — diferencia +1 en ambos).</p>
 
   <div class="rules-points__row">
     <div class="rules-points__left">
       <span class="rules-points__badge rules-points__badge--green">✓</span>
-      <span class="rules-points__label">Resultado correcto</span>
+      <span class="rules-points__label">Solo el ganador</span>
     </div>
     <span class="rules-points__val">1 pt</span>
   </div>
-  <p class="rules-points__desc">Acertás quién gana o que es empate, pero no el marcador exacto.</p>
+  <p class="rules-points__desc">Acertás quién gana o que es empate, pero la diferencia de goles no coincide.</p>
 
   <div class="rules-points__row">
     <div class="rules-points__left">
       <span class="rules-points__badge rules-points__badge--red">✗</span>
-      <span class="rules-points__label">Resultado incorrecto</span>
+      <span class="rules-points__label">Sin acierto</span>
     </div>
     <span class="rules-points__val">0 pts</span>
   </div>
-  <p class="rules-points__desc">El partido terminó diferente a lo que predijiste.</p>
+  <p class="rules-points__desc">El ganador pronosticado no coincide con el resultado real.</p>
+</div>
+
+<!-- Callout 2 puntos -->
+<div class="rules-callout">
+  <span class="rules-callout__icon">💡</span>
+  <div>
+    <strong>¿Cuándo ganás 2 puntos en el marcador?</strong>
+    <p>Cuando el ganador es correcto Y la diferencia de goles coincide, aunque los totales sean distintos.</p>
+    <div class="rules-callout__examples">
+      <div class="rules-callout__ex">Pronosticaste 2–1 → Terminó 3–2 → diferencia +1 en ambos → <strong>2 pts</strong></div>
+      <div class="rules-callout__ex">Pronosticaste 0–2 → Terminó 1–3 → diferencia –2 en ambos → <strong>2 pts</strong></div>
+      <div class="rules-callout__ex">Pronosticaste 1–1 → Terminó 2–2 → empate en ambos (diff 0) → <strong>2 pts</strong></div>
+    </div>
+  </div>
 </div>
 
 <!-- Tiempos de cierre -->
@@ -92,7 +158,7 @@
   <div>
     <strong>El jugador con más puntos al final del torneo gana el reto.</strong>
     <p style="margin:var(--s1) 0 0; color:var(--text-muted); font-size:var(--text-sm);">
-      En caso de empate en puntos, gana quien tenga más resultados exactos. Podés seguir tu posición en el ranking general y por jornada desde la sección <strong>Retos</strong>.
+      En caso de empate en puntos, gana quien tenga más marcadores exactos. Podés seguir tu posición en el ranking general y por jornada desde la sección <strong>Retos</strong>.
     </p>
   </div>
 </div>

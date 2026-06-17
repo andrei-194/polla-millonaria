@@ -2244,8 +2244,8 @@ textarea.form-input {
   display: flex;
   align-items: flex-start;
   gap: var(--s3);
-  background: var(--surface);
-  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  border-radius: var(--r-lg);
   padding: var(--s4);
   border: 1px solid var(--border);
 }
@@ -2268,7 +2268,7 @@ textarea.form-input {
 .rules-step__body strong { display: block; color: var(--text-primary); margin-bottom: var(--s1); }
 .rules-step__body p { margin: 0; font-size: var(--text-sm); color: var(--text-muted); line-height: 1.5; }
 
-.rules-points { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; margin-bottom: var(--s4); }
+.rules-points { background: var(--bg-surface); border-radius: var(--r-lg); border: 1px solid var(--border); overflow: hidden; margin-bottom: var(--s4); }
 
 .rules-points__row {
   display: flex;
@@ -2317,12 +2317,76 @@ textarea.form-input {
 
 .rules-points__desc:last-child { border-bottom: none; }
 
+.rules-points__row--silver { background: rgba(255,165,2,0.05); }
+.rules-points__badge--silver { background: rgba(255,165,2,0.15); color: var(--warning); }
+
+/* ── Rules: Callout 2pts ──────────────────────────────────── */
+.rules-callout {
+  background: rgba(255,165,2,0.06);
+  border: 1px solid rgba(255,165,2,0.2);
+  border-radius: var(--r-lg);
+  padding: var(--s4);
+  margin-bottom: var(--s4);
+  display: flex;
+  gap: var(--s3);
+  align-items: flex-start;
+}
+.rules-callout__icon { font-size: 1.25rem; flex-shrink: 0; margin-top: 2px; }
+.rules-callout strong { display: block; color: var(--warning); margin-bottom: var(--s1); font-size: var(--text-sm); }
+.rules-callout p { margin: 0; font-size: var(--text-sm); color: var(--text-muted); line-height: 1.5; }
+.rules-callout__examples { display: flex; flex-direction: column; gap: var(--s2); margin-top: var(--s3); }
+.rules-callout__ex {
+  background: var(--bg-surface);
+  border-radius: var(--r-sm);
+  padding: var(--s2) var(--s3);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  line-height: 1.5;
+}
+
+/* ── Rules: Event Types ────────────────────────────────────── */
+.rules-events { display: flex; flex-direction: column; gap: var(--s3); margin-bottom: var(--s4); }
+.rules-event-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--s3) var(--s4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+.rules-event-card__left { display: flex; flex-direction: column; gap: 2px; }
+.rules-event-card__name { font-size: var(--text-sm); font-weight: var(--fw-semibold); color: var(--text-primary); }
+.rules-event-card__desc { font-size: var(--text-xs); color: var(--text-muted); }
+.rules-event-card__pts { font-family: var(--font-display); font-weight: var(--fw-bold); font-size: var(--text-sm); white-space: nowrap; color: var(--text-muted); }
+.rules-event-card__pts strong { color: var(--gold); }
+
+/* ── Rules: Max pts badge ──────────────────────────────────── */
+.rules-max-pts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  background: rgba(245,197,24,0.08);
+  border: 1px solid rgba(245,197,24,0.2);
+  border-radius: var(--r-lg);
+  padding: var(--s3) var(--s4);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--s6);
+  text-align: center;
+  flex-wrap: wrap;
+}
+.rules-max-pts strong { color: var(--gold); font-family: var(--font-display); }
+
 .rules-card {
   display: flex;
   align-items: flex-start;
   gap: var(--s3);
-  background: var(--surface);
-  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  border-radius: var(--r-lg);
   border: 1px solid var(--border);
   padding: var(--s4);
   margin-bottom: var(--s4);
@@ -2369,6 +2433,7 @@ textarea.form-input {
 
 .landing-points__row:last-child { border-bottom: none; }
 .landing-points__row--gold { color: var(--gold); }
+.landing-points__row--silver { color: var(--warning); }
 .landing-points__row--green { color: var(--green); }
 
 .landing-points__val {
@@ -2414,6 +2479,7 @@ textarea.form-input {
 }
 
 .landing-points__badge--gold { background: rgba(255,201,71,0.15); color: var(--gold); }
+.landing-points__badge--silver { background: rgba(255,165,2,0.15); color: var(--warning); }
 .landing-points__badge--green { background: rgba(0,230,118,0.12); color: var(--green); }
 .landing-points__badge--red { background: rgba(255,71,87,0.12); color: var(--danger); }
 
