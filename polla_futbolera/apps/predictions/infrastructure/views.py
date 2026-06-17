@@ -115,7 +115,7 @@ def fecha_detail_view(request, slug, numero):
     ]
 
     partidos_abiertos = [p for p in partidos_con_eventos if _tiene_eventos_abiertos(p["eventos"])]
-    partidos_cerrados = [p for p in partidos_con_eventos if not _tiene_eventos_abiertos(p["eventos"])]
+    partidos_cerrados = [p for p in reversed(partidos_con_eventos) if not _tiene_eventos_abiertos(p["eventos"])]
 
     return render(request, "predictions/fecha_detail.html", {
         "quiniela": quiniela,
