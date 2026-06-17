@@ -2961,7 +2961,7 @@ textarea.form-input {
   justify-content: space-between;
   width: 100%;
   padding: var(--s3) var(--s4);
-  background: var(--green-glow);
+  background: var(--bg-elevated);
   border: 1px solid var(--green-dim);
   border-radius: var(--r-lg);
   color: var(--green);
