@@ -2953,8 +2953,20 @@ textarea.form-input {
   margin-bottom: var(--s4);
 }
 
-/* El toggle es hijo directo de #cerrados-wrapper (que incluye abiertos),
-   por lo que su containing block es toda la página → sticky funciona. */
+/* Wrapper sticky separado del button — iOS Safari renderiza mejor
+   el background sólido cuando el sticky está en un div, no en button. */
+.section-divider-sticky {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 50;
+  margin-bottom: var(--s4);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
 .section-divider__toggle {
   display: flex;
   align-items: center;
@@ -2970,12 +2982,6 @@ textarea.form-input {
   cursor: pointer;
   text-align: left;
   transition: background 0.15s, box-shadow 0.15s;
-  position: sticky;
-  top: var(--header-h);
-  z-index: 50;
-  margin-bottom: var(--s4);
-  will-change: transform;
-  transform: translateZ(0);
 }
 
 .section-divider__toggle:hover {
