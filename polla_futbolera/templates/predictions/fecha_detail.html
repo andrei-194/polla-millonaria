@@ -31,7 +31,7 @@
         aria-expanded="{% if not partidos_abiertos %}true{% else %}false{% endif %}"
         aria-controls="cerrados-body">
   <span class="section-divider__label">
-    <i class="bi bi-flag-fill"></i>
+    <i class="bi bi-check-circle-fill"></i>
     {{ partidos_cerrados|length }} partido{{ partidos_cerrados|length|pluralize }} finalizado{{ partidos_cerrados|length|pluralize }}
   </span>
   <i class="bi bi-chevron-down section-divider__chevron"></i>
