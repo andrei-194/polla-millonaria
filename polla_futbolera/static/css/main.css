@@ -111,7 +111,7 @@ img { max-width: 100%; display: block; }
   position: relative;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Subtle field-line texture on background */
