@@ -2953,6 +2953,8 @@ textarea.form-input {
   margin-bottom: var(--s4);
 }
 
+/* El toggle es hijo directo de #cerrados-wrapper (que incluye abiertos),
+   por lo que su containing block es toda la página → sticky funciona. */
 .section-divider__toggle {
   display: flex;
   align-items: center;
@@ -2968,47 +2970,14 @@ textarea.form-input {
   cursor: pointer;
   text-align: left;
   transition: background 0.15s;
+  position: sticky;
+  top: var(--header-h);
+  z-index: 50;
+  margin-bottom: var(--s4);
 }
 
 .section-divider__toggle:hover {
   background: var(--bg-surface);
-}
-
-/* Barra fija que aparece cuando el toggle original sale del viewport */
-.cerrados-fixed-bar {
-  display: none;
-  position: fixed;
-  top: var(--header-h);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  z-index: 90;
-  padding: var(--s2) var(--s4);
-  background: rgba(7,12,20,0.96);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-}
-
-.cerrados-fixed-bar.is-visible {
-  display: block;
-}
-
-.cerrados-fixed-bar__btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: var(--s2) var(--s3);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  font-weight: var(--fw-medium);
-  cursor: pointer;
-  text-align: left;
 }
 
 .section-divider__label {
