@@ -359,6 +359,19 @@
 </div>
 {% endif %}
 
+{% if partidos_cerrados %}
+<!-- Barra fija que aparece al hacer scroll, cuando el toggle original sale del viewport -->
+<div class="cerrados-fixed-bar" id="cerrados-fixed-bar" aria-hidden="true">
+  <button class="cerrados-fixed-bar__btn" id="cerrados-fixed-btn" aria-controls="cerrados-body">
+    <span class="section-divider__label">
+      <i class="bi bi-flag-fill"></i>
+      {{ partidos_cerrados|length }} partido{{ partidos_cerrados|length|pluralize }} finalizado{{ partidos_cerrados|length|pluralize }}
+    </span>
+    <i class="bi bi-chevron-down section-divider__chevron" id="cerrados-fixed-chevron"></i>
+  </button>
+</div>
+{% endif %}
+
 <!-- Bottom Sheet de pronóstico -->
 <input type="hidden" id="csrf-token-value" value="{{ csrf_token }}">
 <div id="predict-overlay" class="predict-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="predict-sheet-question">
@@ -387,15 +400,43 @@
 {% block extra_js %}
 <script>
 (function () {
-  var btn  = document.getElementById('cerrados-toggle');
-  var body = document.getElementById('cerrados-body');
+  var btn       = document.getElementById('cerrados-toggle');
+  var body      = document.getElementById('cerrados-body');
+  var fixedBar  = document.getElementById('cerrados-fixed-bar');
+  var fixedBtn  = document.getElementById('cerrados-fixed-btn');
+  var fixedChev = document.getElementById('cerrados-fixed-chevron');
   if (!btn || !body) return;
+
+  function setExpanded(expanded) {
+    btn.setAttribute('aria-expanded', String(expanded));
+    if (fixedBtn) fixedBtn.setAttribute('aria-expanded', String(expanded));
+    if (fixedChev) fixedChev.style.transform = expanded ? 'rotate(180deg)' : '';
+    if (expanded) { body.removeAttribute('hidden'); }
+    else          { body.setAttribute('hidden', ''); }
+  }
+
   btn.addEventListener('click', function () {
-    var expanded = this.getAttribute('aria-expanded') === 'true';
-    this.setAttribute('aria-expanded', String(!expanded));
-    if (expanded) { body.setAttribute('hidden', ''); }
-    else          { body.removeAttribute('hidden'); }
+    setExpanded(this.getAttribute('aria-expanded') !== 'true');
   });
+
+  if (fixedBtn) {
+    fixedBtn.addEventListener('click', function () {
+      var expanded = btn.getAttribute('aria-expanded') === 'true';
+      setExpanded(!expanded);
+      if (!expanded) {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+
+  if (fixedBar && 'IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function (entries) {
+      var visible = entries[0].isIntersecting;
+      fixedBar.classList.toggle('is-visible', !visible);
+      fixedBar.setAttribute('aria-hidden', String(visible));
+    }, { threshold: 0 });
+    observer.observe(btn);
+  }
 }());
 </script>
 <script src="{% static 'js/predict-sheet.js' %}"></script>
