@@ -430,10 +430,18 @@
   }
 
   if (fixedBar && 'IntersectionObserver' in window) {
+    var content = document.querySelector('.app-content');
     var observer = new IntersectionObserver(function (entries) {
       var visible = entries[0].isIntersecting;
       fixedBar.classList.toggle('is-visible', !visible);
       fixedBar.setAttribute('aria-hidden', String(visible));
+      if (content) {
+        if (!visible) {
+          content.style.paddingTop = 'calc(var(--s5) + ' + fixedBar.offsetHeight + 'px)';
+        } else {
+          content.style.paddingTop = '';
+        }
+      }
     }, { threshold: 0 });
     observer.observe(btn);
   }
