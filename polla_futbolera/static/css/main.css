@@ -2961,7 +2961,7 @@ textarea.form-input {
   justify-content: space-between;
   width: 100%;
   padding: var(--s3) var(--s4);
-  background: var(--bg-elevated);
+  background: #132030;
   border: 1px solid var(--green-dim);
   border-radius: var(--r-lg);
   color: var(--green);
@@ -2974,6 +2974,8 @@ textarea.form-input {
   top: var(--header-h);
   z-index: 50;
   margin-bottom: var(--s4);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .section-divider__toggle:hover {
