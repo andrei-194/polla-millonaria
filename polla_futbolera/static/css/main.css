@@ -2948,23 +2948,16 @@ textarea.form-input {
 }
 
 /* ── Section Divider (acordeón partidos cerrados) ── */
-.section-divider {
-  margin-top: var(--s4);
-  margin-bottom: var(--s4);
-}
-
-/* Wrapper sticky separado del button — iOS Safari renderiza mejor
-   el background sólido cuando el sticky está en un div, no en button. */
+/* Sticky wrapper: el fondo va aquí para que cubra el scroll en todos los browsers.
+   Sin will-change/transform3D — esos hacks de GPU causan que iOS Safari no pinte
+   el background-color del layer compositeado correctamente. */
 .section-divider-sticky {
+  position: -webkit-sticky;
   position: sticky;
   top: var(--header-h);
   z-index: 50;
   margin-bottom: var(--s4);
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  will-change: transform;
+  background: #132030;
 }
 
 .section-divider__toggle {
@@ -2981,11 +2974,12 @@ textarea.form-input {
   font-weight: var(--fw-medium);
   cursor: pointer;
   text-align: left;
+  -webkit-appearance: none;
   transition: background 0.15s, box-shadow 0.15s;
 }
 
 .section-divider__toggle:hover {
-  background: rgba(0,230,118,0.22);
+  background: rgba(0, 230, 118, 0.22);
   box-shadow: 0 0 12px var(--green-glow);
 }
 
