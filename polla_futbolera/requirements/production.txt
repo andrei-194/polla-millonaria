@@ -1,3 +1,2 @@
 -r base.txt
 sentry-sdk[django]==2.*
-django-anymail[resend]
