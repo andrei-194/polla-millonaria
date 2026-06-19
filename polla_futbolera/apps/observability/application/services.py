@@ -151,7 +151,7 @@ class ReporteService:
             message=cuerpo,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=_ALERT_EMAILS,
-            fail_silently=False,
+            fail_silently=True,
         )
         logger.info("ReporteService: reporte diario enviado a %s", _ALERT_EMAILS)
 
