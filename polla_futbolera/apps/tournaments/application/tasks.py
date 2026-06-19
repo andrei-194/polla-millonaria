@@ -2,8 +2,11 @@
 Tasks para django-q2 worker.
 """
 import logging
+import time
 
 logger = logging.getLogger("scoring.pipeline")
+
+_API_INTER_REQUEST_SLEEP = 6  # football-data.org free tier: 10 req/min → 6 s mínimo entre calls
 
 
 def run_sync_match_results(window_minutes: int = 300) -> dict:
@@ -49,7 +52,9 @@ def run_sync_match_results(window_minutes: int = 300) -> dict:
             except Exception:
                 logger.exception("run_sync_match_results: error API para match %s", match.id)
                 errores_api += 1
+                time.sleep(_API_INTER_REQUEST_SLEEP)
                 continue
+            time.sleep(_API_INTER_REQUEST_SLEEP)
 
             if result_dto.status != "finished":
                 continue
