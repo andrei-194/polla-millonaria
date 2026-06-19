@@ -20,6 +20,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     "django_q",
+    "anymail",
 ]
 
 LOCAL_APPS = [
