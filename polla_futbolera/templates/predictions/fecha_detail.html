@@ -165,11 +165,11 @@
         <div class="ev-row__right">
           {% if punt %}
             {% if punt.codigo_acierto == 'EXACT' %}
-            <span class="outcome-badge outcome-badge--exacto"><i class="bi bi-star-fill"></i> Exacto</span>
+            <span class="outcome-badge outcome-badge--exacto"><i class="bi bi-star-fill"></i> Exacto · +{{ punt.puntos }} pts</span>
             {% elif punt.codigo_acierto == 'MISS' %}
-            <span class="outcome-badge outcome-badge--fallo"><i class="bi bi-x-circle-fill"></i> Fallo</span>
+            <span class="outcome-badge outcome-badge--fallo"><i class="bi bi-x-circle-fill"></i> Fallo · 0 pts</span>
             {% else %}
-            <span class="outcome-badge outcome-badge--acierto"><i class="bi bi-check-circle-fill"></i> Acierto</span>
+            <span class="outcome-badge outcome-badge--acierto"><i class="bi bi-check-circle-fill"></i> Acierto · +{{ punt.puntos }} pts</span>
             {% endif %}
           {% elif prono %}
           <span class="outcome-badge outcome-badge--sin-pts">Sin pts</span>
@@ -331,11 +331,11 @@
       <div class="ev-row__right">
         {% if punt %}
           {% if punt.codigo_acierto == 'EXACT' %}
-          <span class="outcome-badge outcome-badge--exacto"><i class="bi bi-star-fill"></i> Exacto</span>
+          <span class="outcome-badge outcome-badge--exacto"><i class="bi bi-star-fill"></i> Exacto · +{{ punt.puntos }} pts</span>
           {% elif punt.codigo_acierto == 'MISS' %}
-          <span class="outcome-badge outcome-badge--fallo"><i class="bi bi-x-circle-fill"></i> Fallo</span>
+          <span class="outcome-badge outcome-badge--fallo"><i class="bi bi-x-circle-fill"></i> Fallo · 0 pts</span>
           {% else %}
-          <span class="outcome-badge outcome-badge--acierto"><i class="bi bi-check-circle-fill"></i> Acierto</span>
+          <span class="outcome-badge outcome-badge--acierto"><i class="bi bi-check-circle-fill"></i> Acierto · +{{ punt.puntos }} pts</span>
           {% endif %}
         {% elif prono %}
         <span class="outcome-badge outcome-badge--sin-pts">Sin pts</span>
