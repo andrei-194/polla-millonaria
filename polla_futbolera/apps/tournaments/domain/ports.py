@@ -21,9 +21,15 @@ class MatchDTO:
 @dataclass
 class ResultDTO:
     external_id: str
-    home_score: int
+    home_score: int      # tiempo reglamentario (90 min)
     away_score: int
     status: str
+    home_score_et: Optional[int] = None
+    away_score_et: Optional[int] = None
+    home_score_pen: Optional[int] = None
+    away_score_pen: Optional[int] = None
+    match_duration: Optional[str] = None   # REGULAR | EXTRA_TIME | PENALTY_SHOOTOUT
+    penalty_winner: Optional[str] = None   # H | A
 
 
 class FootballAPIPort(Protocol):

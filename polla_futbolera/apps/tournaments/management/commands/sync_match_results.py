@@ -27,7 +27,17 @@ class Command(BaseCommand):
         parser.add_argument(
             "--match-id",
             type=int,
-            help="Procesa un único partido por ID interno.",
+            help="Procesa un único partido por ID interno de Django.",
+        )
+        parser.add_argument(
+            "--external-id",
+            type=str,
+            help="Procesa un único partido por external_id (ID de football-data.org).",
+        )
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            help="Re-sincroniza aunque el partido ya esté marcado como 'finished' en la BD.",
         )
 
     def handle(self, *args, **options):
@@ -47,16 +57,21 @@ class Command(BaseCommand):
 
         adapter = FootballDataOrgAdapter()
         dry_run = options["dry_run"]
+        force = options["force"]
         window = options["window_minutes"]
         match_id = options.get("match_id")
+        external_id = options.get("external_id")
 
         now = timezone.now()
 
-        if match_id:
+        if external_id:
+            candidatos = Match.objects.filter(external_id=external_id)
+        elif match_id:
             candidatos = Match.objects.filter(id=match_id)
         else:
+            status_filter = ("scheduled", "in_progress") if not force else ("scheduled", "in_progress", "finished")
             candidatos = Match.objects.filter(
-                status__in=("scheduled", "in_progress"),
+                status__in=status_filter,
                 match_date__lte=now - timedelta(minutes=90),
                 match_date__gte=now - timedelta(minutes=window),
             )
@@ -80,12 +95,23 @@ class Command(BaseCommand):
                 continue
 
             if result_dto.status != "finished":
-                self.stdout.write(f"    Status: {result_dto.status} — se omite")
-                time.sleep(0.5)
-                continue
+                if force or external_id or match_id:
+                    self.stdout.write(
+                        self.style.WARNING(f"    Status API: {result_dto.status} — forzando igualmente")
+                    )
+                else:
+                    self.stdout.write(f"    Status: {result_dto.status} — se omite")
+                    time.sleep(0.5)
+                    continue
 
+            duration_label = f" [{result_dto.match_duration}]" if result_dto.match_duration else ""
+            pen_label = (
+                f" (pen {result_dto.home_score_pen}-{result_dto.away_score_pen})"
+                if result_dto.home_score_pen is not None else ""
+            )
             self.stdout.write(
-                f"    Resultado: {result_dto.home_score}-{result_dto.away_score} (finished)"
+                f"    Resultado: {result_dto.home_score}-{result_dto.away_score}"
+                f"{pen_label}{duration_label} (finished)"
             )
 
             if dry_run:
@@ -95,8 +121,33 @@ class Command(BaseCommand):
 
             match.home_score = result_dto.home_score
             match.away_score = result_dto.away_score
+            match.home_score_et = result_dto.home_score_et
+            match.away_score_et = result_dto.away_score_et
+            match.home_score_pen = result_dto.home_score_pen
+            match.away_score_pen = result_dto.away_score_pen
+            match.match_duration = result_dto.match_duration
+            match.penalty_winner = result_dto.penalty_winner
             match.status = "finished"
-            match.save(update_fields=["home_score", "away_score", "status", "synced_at"])
+
+            # Si el partido ya estaba puntuado, resetear eventos para que
+            # propagar_y_calcular los re-procese con el score correcto.
+            if force or external_id or match_id:
+                from apps.predictions.infrastructure.models import EventoPartido
+                reseteados = EventoPartido.objects.filter(
+                    partido=match
+                ).exclude(estado="cancelado").update(
+                    resultado=None, estado=EventoPartido.Estado.CERRADO
+                )
+                if reseteados:
+                    self.stdout.write(f"    EventoPartido reseteados: {reseteados}")
+
+            match.save(update_fields=[
+                "home_score", "away_score",
+                "home_score_et", "away_score_et",
+                "home_score_pen", "away_score_pen",
+                "match_duration", "penalty_winner",
+                "status", "synced_at",
+            ])
             # El signal post_save dispara propagar_y_calcular automáticamente.
             actualizados += 1
             time.sleep(0.5)

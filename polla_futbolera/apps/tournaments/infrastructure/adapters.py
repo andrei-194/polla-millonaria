@@ -37,11 +37,38 @@ class FootballDataOrgAdapter(BaseHTTPClient, FootballAPIPort):
     def fetch_results(self, match_external_id: str) -> ResultDTO:
         # La API v4 de football-data.org devuelve el partido en el root del response
         data = self.get(f"/matches/{match_external_id}")
+        score = data["score"]
+        duration = score.get("duration", "REGULAR")
+
+        # regularTime = 90 min exactos; fullTime = fallback para partidos normales
+        reg = score.get("regularTime") or score.get("fullTime") or {}
+        et = score.get("extraTime") or {}
+        pen = score.get("penalties") or {}
+        winner_raw = score.get("winner", "")
+
+        home_reg = reg.get("home")
+        away_reg = reg.get("away")
+
+        # penalty_winner solo aplica cuando el partido fue definido por penales
+        if duration == "PENALTY_SHOOTOUT" and home_reg == away_reg:
+            penalty_winner = (
+                "H" if winner_raw == "HOME_TEAM" else
+                "A" if winner_raw == "AWAY_TEAM" else None
+            )
+        else:
+            penalty_winner = None
+
         return ResultDTO(
             external_id=match_external_id,
-            home_score=data["score"]["fullTime"]["home"],
-            away_score=data["score"]["fullTime"]["away"],
+            home_score=home_reg,
+            away_score=away_reg,
             status=data["status"].lower(),
+            home_score_et=et.get("home"),
+            away_score_et=et.get("away"),
+            home_score_pen=pen.get("home"),
+            away_score_pen=pen.get("away"),
+            match_duration=duration,
+            penalty_winner=penalty_winner,
         )
 
 

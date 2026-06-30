@@ -64,6 +64,13 @@ class Match(models.Model):
     match_date = models.DateTimeField()
     home_score = models.IntegerField(null=True, blank=True)
     away_score = models.IntegerField(null=True, blank=True)
+    # Campos de tiempo extra / penales (solo display, no afectan scoring)
+    home_score_et = models.IntegerField(null=True, blank=True)
+    away_score_et = models.IntegerField(null=True, blank=True)
+    home_score_pen = models.IntegerField(null=True, blank=True)
+    away_score_pen = models.IntegerField(null=True, blank=True)
+    match_duration = models.CharField(max_length=20, null=True, blank=True)  # REGULAR | EXTRA_TIME | PENALTY_SHOOTOUT
+    penalty_winner = models.CharField(max_length=1, null=True, blank=True)   # H | A
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="scheduled")
     fecha = models.ForeignKey(
         Fecha, on_delete=models.SET_NULL, null=True, blank=True, related_name="partidos"

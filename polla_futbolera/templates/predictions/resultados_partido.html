@@ -17,9 +17,14 @@
     <div style="display:flex;align-items:center;justify-content:center;gap:var(--s4);">
       <span style="font-weight:var(--fw-semibold);">{{ match.home_team }}</span>
       {% if match.home_score is not None %}
-      <span style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:var(--fw-black);">
-        {{ match.home_score }} - {{ match.away_score }}
-      </span>
+      <div style="text-align:center;">
+        <span style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:var(--fw-black);">
+          {{ match.home_score }} - {{ match.away_score }}
+        </span>
+        {% if match.match_duration == "PENALTY_SHOOTOUT" or match.match_duration == "EXTRA_TIME" %}
+        <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:2px;">(p)</div>
+        {% endif %}
+      </div>
       {% else %}
       <span class="text-muted">vs</span>
       {% endif %}
