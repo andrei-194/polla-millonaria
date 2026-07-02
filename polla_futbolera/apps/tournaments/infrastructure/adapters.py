@@ -40,9 +40,22 @@ class FootballDataOrgAdapter(BaseHTTPClient, FootballAPIPort):
         score = data["score"]
         duration = score.get("duration", "REGULAR")
 
-        # regularTime = 90 min exactos; fullTime = fallback para partidos normales
-        reg = score.get("regularTime") or score.get("fullTime") or {}
+        # regularTime = 90 min exactos. La API a veces lo devuelve como
+        # {"home": null, "away": null} (dict truthy pero sin datos) — en ese caso
+        # NO se puede usar fullTime tal cual, porque fullTime incluye los goles
+        # del tiempo extra. Hay que restarle extraTime (goles marcados solo
+        # durante el alargue) para recuperar el marcador de los 90 minutos.
+        reg = score.get("regularTime") or {}
         et = score.get("extraTime") or {}
+        if reg.get("home") is None or reg.get("away") is None:
+            full = score.get("fullTime") or {}
+            if et.get("home") is not None and full.get("home") is not None:
+                reg = {
+                    "home": full["home"] - et["home"],
+                    "away": full["away"] - et["away"],
+                }
+            else:
+                reg = full
         pen = score.get("penalties") or {}
         winner_raw = score.get("winner", "")
 
