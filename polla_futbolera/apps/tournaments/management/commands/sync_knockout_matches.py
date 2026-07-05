@@ -27,6 +27,10 @@ logger = logging.getLogger("scoring.pipeline")
 # Prefijos que identifican partidos de grupo — se excluyen
 _GROUP_PREFIXES = ("GROUP_",)
 
+# Partidos en estos estados ya tienen resultado real y/o puntuaciones calculadas.
+# Re-sincronizar jamás debe pisar su status ni sus datos.
+_PROTECTED_STATUSES = ("finished", "in_progress")
+
 # Mapeo de stage API → numero de Fecha en BD (creadas por seed_mundial_2026)
 PHASE_TO_FECHA = {
     "LAST_32":        4,
@@ -127,7 +131,7 @@ class Command(BaseCommand):
         self.stdout.write("")
 
         # ── Procesar ─────────────────────────────────────────────────────────
-        creados = actualizados = eventos_creados = eventos_existentes = 0
+        creados = actualizados = protegidos = eventos_creados = eventos_existentes = 0
         skipped_tbd = skipped_equipo = skipped_fase = 0
 
         for fixture in knockout:
@@ -171,34 +175,56 @@ class Command(BaseCommand):
                 skipped_equipo += 1
                 continue
 
-            self.stdout.write(
-                f"  {label}{fixture.phase}: {home} vs {away} @ "
-                f"{fixture.match_date.strftime('%Y-%m-%d %H:%M UTC')}"
-            )
+            fecha_str = fixture.match_date.strftime("%Y-%m-%d %H:%M UTC")
+
+            # Un partido ya finalizado (o en curso) es intocable: su resultado
+            # y puntuaciones ya están calculados. Re-sincronizar acá nunca debe
+            # pisar su status ni sus datos — solo nos interesa crear partidos
+            # de fases que todavía no tenemos registradas.
+            existente = Match.objects.filter(external_id=fixture.external_id).first()
+            protegido = existente is not None and existente.status in _PROTECTED_STATUSES
+
+            if protegido:
+                self.stdout.write(
+                    f"  {label}{fixture.phase}: {home} vs {away} @ {fecha_str} "
+                    f"— ya {existente.get_status_display().lower()}, no se modifica"
+                )
+                protegidos += 1
+                match = existente
+            else:
+                self.stdout.write(f"  {label}{fixture.phase}: {home} vs {away} @ {fecha_str}")
+
+                if dry_run:
+                    if existente is None:
+                        creados += 1
+                    else:
+                        actualizados += 1
+                    continue
+
+                # Crear / actualizar partido (solo llega acá si no está protegido)
+                match, created = Match.objects.update_or_create(
+                    external_id=fixture.external_id,
+                    defaults={
+                        "tournament": torneo,
+                        "home_team": home,
+                        "away_team": away,
+                        "match_date": fixture.match_date,
+                        "phase": fixture.phase,
+                        "fecha": fecha_obj,
+                        "status": "scheduled",
+                    },
+                )
+                if created:
+                    creados += 1
+                else:
+                    actualizados += 1
 
             if dry_run:
-                creados += 1
                 continue
 
-            # Crear / actualizar partido
-            match, created = Match.objects.update_or_create(
-                external_id=fixture.external_id,
-                defaults={
-                    "tournament": torneo,
-                    "home_team": home,
-                    "away_team": away,
-                    "match_date": fixture.match_date,
-                    "phase": fixture.phase,
-                    "fecha": fecha_obj,
-                    "status": "scheduled",
-                },
-            )
-            if created:
-                creados += 1
-            else:
-                actualizados += 1
-
-            # Crear EventoPartido por quiniela (solo los tipos que ya usa esa quiniela)
+            # Crear EventoPartido por quiniela (solo los tipos que ya usa esa quiniela).
+            # Se ejecuta también para partidos protegidos, por si se sumó una
+            # quiniela nueva después de que el partido ya había finalizado.
             plazo = fixture.match_date - timedelta(
                 minutes=settings.PREDICTION_DEADLINE_MINUTES
             )
@@ -224,6 +250,7 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS(
             f"{label}Partidos — creados: {creados} | actualizados: {actualizados} | "
+            f"protegidos (ya finalizados/en curso): {protegidos} | "
             f"TBD: {skipped_tbd} | equipo no encontrado: {skipped_equipo} | "
             f"fase desconocida: {skipped_fase}"
         ))

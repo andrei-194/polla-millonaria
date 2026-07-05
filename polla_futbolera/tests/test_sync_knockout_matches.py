@@ -248,6 +248,81 @@ class TestSyncKnockoutMatches(TestCase):
                 self.assertIsNotNone(match, f"Partido {phase} no creado")
                 self.assertEqual(match.fecha.numero, fecha_num)
 
+    # ── Partido ya finalizado no se toca ─────────────────────────────────────
+
+    @patch("apps.tournaments.infrastructure.adapters.FootballDataOrgAdapter.fetch_fixtures")
+    def test_partido_finalizado_no_se_modifica(self, mock_fetch):
+        otro_equipo = Team.objects.create(name="Bélgica", external_code="BEL")
+        match = Match.objects.create(
+            tournament=self.torneo,
+            home_team=self.mex, away_team=self.ger,
+            external_id="900011",
+            match_date=datetime.datetime(2026, 6, 29, 18, 0, tzinfo=UTC),
+            phase="LAST_32", fecha=self.fecha_r32,
+            status="finished", home_score=2, away_score=2,
+        )
+        evento = EventoPartido.objects.create(
+            partido=match, quiniela=self.quiniela, tipo_evento=self.tipo_score,
+            plazo_cierre=datetime.datetime(2026, 6, 29, 17, 40, tzinfo=UTC),
+            estado=EventoPartido.Estado.PUNTUADO, resultado="2-2",
+        )
+
+        # La API "corrige" el fixture con otro equipo y otra fecha —
+        # nada de esto debe aplicarse porque el partido ya finalizó.
+        mock_fetch.return_value = [
+            _fixture(otro_equipo.name, "Germany", "LAST_32", "900011"),
+        ]
+        call_command("sync_knockout_matches")
+
+        match.refresh_from_db()
+        self.assertEqual(match.status, "finished")
+        self.assertEqual(match.home_score, 2)
+        self.assertEqual(match.away_score, 2)
+        self.assertEqual(match.home_team, self.mex)  # no se pisó con "Bélgica"
+
+        evento.refresh_from_db()
+        self.assertEqual(evento.estado, EventoPartido.Estado.PUNTUADO)
+        self.assertEqual(evento.resultado, "2-2")
+
+    @patch("apps.tournaments.infrastructure.adapters.FootballDataOrgAdapter.fetch_fixtures")
+    def test_partido_en_curso_no_se_modifica(self, mock_fetch):
+        match = Match.objects.create(
+            tournament=self.torneo,
+            home_team=self.mex, away_team=self.ger,
+            external_id="900012",
+            match_date=datetime.datetime(2026, 6, 29, 18, 0, tzinfo=UTC),
+            phase="LAST_32", fecha=self.fecha_r32,
+            status="in_progress", home_score=1, away_score=0,
+        )
+        mock_fetch.return_value = [
+            _fixture("Mexico", "Germany", "LAST_32", "900012"),
+        ]
+        call_command("sync_knockout_matches")
+
+        match.refresh_from_db()
+        self.assertEqual(match.status, "in_progress")
+        self.assertEqual(match.home_score, 1)
+
+    @patch("apps.tournaments.infrastructure.adapters.FootballDataOrgAdapter.fetch_fixtures")
+    def test_dry_run_reporta_protegidos_sin_contarlos_como_creados(self, mock_fetch):
+        Match.objects.create(
+            tournament=self.torneo,
+            home_team=self.mex, away_team=self.ger,
+            external_id="900013",
+            match_date=datetime.datetime(2026, 6, 29, 18, 0, tzinfo=UTC),
+            phase="LAST_32", fecha=self.fecha_r32,
+            status="finished", home_score=3, away_score=1,
+        )
+        mock_fetch.return_value = [
+            _fixture("Mexico", "Germany", "LAST_32", "900013"),
+        ]
+        call_command("sync_knockout_matches", dry_run=True)
+
+        # El dry-run no debe alterar nada (verificación adicional a las demás).
+        match = Match.objects.get(external_id="900013")
+        self.assertEqual(match.status, "finished")
+        self.assertEqual(match.home_score, 3)
+
     # ── Filtro por quiniela-slug ─────────────────────────────────────────────
 
     @patch("apps.tournaments.infrastructure.adapters.FootballDataOrgAdapter.fetch_fixtures")
