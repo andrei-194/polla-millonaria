@@ -1,7 +1,26 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.utils import timezone
 from .models import User, UserProfile
+
+
+class LoginForm(AuthenticationForm):
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={
+            "class": "form-input",
+            "placeholder": "Tu nombre de usuario",
+            "autocomplete": "username",
+            "autofocus": True,
+        })
+    )
+    password = forms.CharField(
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            "class": "form-input",
+            "placeholder": "••••••••",
+            "autocomplete": "current-password",
+        }),
+    )
 
 
 class RegisterForm(UserCreationForm):

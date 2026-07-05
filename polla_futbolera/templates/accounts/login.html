@@ -30,16 +30,12 @@
 
       <div class="form-field">
         <label class="form-label" for="id_username">Usuario</label>
-        <input type="text" id="id_username" name="username"
-               class="form-input" placeholder="Tu nombre de usuario"
-               autocomplete="username" autofocus required>
+        {{ form.username }}
       </div>
 
       <div class="form-field">
         <label class="form-label" for="id_password">Contraseña</label>
-        <input type="password" id="id_password" name="password"
-               class="form-input" placeholder="••••••••"
-               autocomplete="current-password" required>
+        {{ form.password }}
       </div>
 
       <div class="mt-6">
