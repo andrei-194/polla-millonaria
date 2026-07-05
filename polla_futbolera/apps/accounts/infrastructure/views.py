@@ -17,7 +17,7 @@ from ..domain.exceptions import (
     InvitationCodeExhaustedError,
     InvitationCodeInactiveError,
 )
-from .forms import RegisterForm, ProfileForm, GenerarCodigoForm, RegistroViaCodigoForm
+from .forms import RegisterForm, ProfileForm, GenerarCodigoForm, RegistroViaCodigoForm, LoginForm
 from .models import UserProfile
 
 
@@ -50,14 +50,14 @@ def register_view(request):
 
 def login_view(request):
     if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
+        form = LoginForm(request, data=request.POST)
+        if form.is_valid():
+            login(request, form.get_user())
             return redirect("quinielas:list")
         messages.error(request, "Credenciales inválidas")
-    return render(request, "accounts/login.html")
+    else:
+        form = LoginForm(request)
+    return render(request, "accounts/login.html", {"form": form})
 
 
 def logout_view(request):
